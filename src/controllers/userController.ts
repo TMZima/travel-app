@@ -1,14 +1,40 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
+import mongoose from "mongoose";
 import jwt from "jsonwebtoken";
+
 import User from "@/models/userModel";
+
 import { dbConnect } from "@/config/db";
 import { sendError, sendSuccess } from "@/utils/apiResponse";
-import { BadRequestError, ConflictError } from "@/utils/customErrors";
+import {
+  BadRequestError,
+  ConfigurationError,
+  ConflictError,
+  MalformedRequestError,
+} from "@/utils/customErrors";
+import { MongooseValidationError } from "@/utils/customErrors";
 
 export async function registerUser(req: NextRequest) {
   try {
-    await dbConnect();
-    const { username, email, password } = await req.json();
+    // Ensure database connection
+    try {
+      await dbConnect();
+    } catch (err) {
+      throw new ConfigurationError(
+        "Failed to connect to the database",
+        "An internal server error occurred. Please try again later."
+      );
+    }
+
+    // Parse JSON request body
+    let requestBody;
+    try {
+      requestBody = await req.json();
+    } catch {
+      throw new MalformedRequestError();
+    }
+
+    const { username, email, password } = requestBody;
 
     if (!username || !email || !password) {
       throw new BadRequestError("All fields are required");
@@ -23,7 +49,10 @@ export async function registerUser(req: NextRequest) {
 
     const secret = process.env.JWT_SECRET;
     if (!secret)
-      throw new Error("JWT secret is not set in environment variables");
+      throw new ConfigurationError(
+        "JWT secret is not set in environment variables",
+        "Internal server error"
+      );
 
     const token = jwt.sign({ id: newUser._id }, secret, {
       expiresIn: "7d",
@@ -41,6 +70,9 @@ export async function registerUser(req: NextRequest) {
       201
     );
   } catch (err) {
+    if (err instanceof mongoose.Error.ValidationError) {
+      return sendError(new MongooseValidationError(err));
+    }
     return sendError(err as Error);
   }
 }

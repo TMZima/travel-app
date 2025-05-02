@@ -6,7 +6,7 @@ export function handleApiError(err: unknown) {
       status: err.statusCode,
       body: {
         error: err.message,
-        message: err.message,
+        message: err.userMessage,
         status: err.statusCode,
         code: err.constructor.name,
       },
