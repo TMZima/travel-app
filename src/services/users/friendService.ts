@@ -1,4 +1,5 @@
 import { NextRequest } from "next/server";
+import { ObjectId } from "mongodb";
 import { dbConnect } from "@/config/db";
 import { findUserById } from "@/repositories/userRepository";
 import {
@@ -32,14 +33,19 @@ export async function addFriendService(req: NextRequest) {
 
   if (!friendId) throw new BadRequestError("Friend ID is required");
 
+  if (!ObjectId.isValid(friendId)) {
+    throw new BadRequestError("Invalid friend ID format");
+  }
+
   const user = await findUserById(userId);
   if (!user) throw new NotFoundError("User not found");
 
-  if (user.friends.includes(friendId)) {
-    throw new ConflictError("Already friends");
-  }
+  const friendObjectId = new ObjectId(friendId);
 
-  user.friends.push(friendId);
+  if (user.friends.some((id: ObjectId) => id.equals(friendObjectId)))
+    throw new ConflictError("Friend already exists");
+
+  user.friends.push(friendObjectId);
   await user.save();
 
   return { message: "Friend added successfully" };
@@ -53,14 +59,22 @@ export async function removeFriendService(req: NextRequest) {
 
   if (!friendId) throw new BadRequestError("Friend ID is required");
 
+  if (!ObjectId.isValid(friendId)) {
+    throw new BadRequestError("Invalid friend ID format");
+  }
+
   const user = await findUserById(userId);
   if (!user) throw new NotFoundError("User not found");
 
-  if (!user.friends.includes(friendId)) {
+  const friendObjectId = new ObjectId(friendId);
+
+  if (!user.friends.some((id: ObjectId) => id.equals(friendObjectId))) {
     throw new NotFoundError("Friend not found");
   }
 
-  user.friends = user.friends.filter((id: string) => id !== friendId);
+  user.friends = user.friends.filter(
+    (id: ObjectId) => !id.equals(friendObjectId)
+  );
   await user.save();
 
   return { message: "Friend removed successfully" };

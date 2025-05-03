@@ -87,7 +87,11 @@ export async function resetPasswordService(req: NextRequest) {
   );
 
   // Save the reset token to the database or send it via email
-  await saveResetToken(user._id, resetToken, Date.now() + 15 * 60 * 1000);
+  await saveResetToken(
+    user._id.toString(),
+    resetToken,
+    Date.now() + 15 * 60 * 1000
+  );
 
   return { message: "Password reset email sent" };
 }
