@@ -5,6 +5,7 @@ import { BadRequestError } from "@/utils/customErrors";
 export function getUserIdFromUrl(req: NextRequest): string {
   const urlParts = req.nextUrl.pathname.split("/");
   const userId = urlParts[urlParts.length - 1];
-  if (!userId) throw new BadRequestError("User ID is required");
+  if (!userId || userId === "users")
+    throw new BadRequestError("User ID is required");
   return userId;
 }
