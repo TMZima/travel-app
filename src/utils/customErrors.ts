@@ -39,14 +39,6 @@ export class MalformedRequestError extends AppError {
   }
 }
 
-export class MethodNotAllowedError extends AppError {
-  constructor(
-    message = "Method not allowed",
-    userMessage = "The requested HTTP method is not supported for this endpoint"
-  ) {
-    super(message, 405, userMessage);
-  }
-}
 export class NotFoundError extends AppError {
   constructor(
     message = "Resource not found",

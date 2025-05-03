@@ -49,6 +49,14 @@ const userSchema = new mongoose.Schema(
         default: [],
       },
     ],
+    resetToken: {
+      type: String,
+      default: null,
+    },
+    resetTokenExpires: {
+      type: Date,
+      default: null,
+    },
   },
   {
     timestamps: true,
@@ -71,6 +79,13 @@ userSchema.pre("save", async function (next) {
     );
   }
 });
+
+// Compare passwords
+userSchema.methods.comparePassword = async function (
+  candidatePassword: string
+) {
+  return await bcrypt.compare(candidatePassword, this.password);
+};
 
 // Transform the JSON response to exclude sensitive fields
 userSchema.set("toJSON", {
