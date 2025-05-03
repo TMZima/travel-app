@@ -38,7 +38,7 @@ export async function saveResetToken(
     throw new Error("User not found");
   }
   user.resetToken = token;
-  user.resetTokenExpires = expires;
+  user.resetTokenExpires = new Date(expires);
   await user.save({ validateBeforeSave: false });
   return user;
 }
@@ -53,14 +53,14 @@ export async function updateUserPassword(
     !user ||
     user.resetToken !== providedToken ||
     !user.resetTokenExpires ||
-    user.resetTokenExpires < Date.now()
+    user.resetTokenExpires.getTime() < Date.now()
   ) {
     return null; // Invalid or expired token
   }
 
   user.password = await bcrypt.hash(newPassword, 10);
-  user.resetToken = undefined;
-  user.resetTokenExpires = undefined;
+  user.resetToken = null;
+  user.resetTokenExpires = null;
 
   await user.save();
   return user;

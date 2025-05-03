@@ -100,6 +100,8 @@ describe("userRepository", () => {
       const mockUser = {
         _id: "123",
         save: jest.fn().mockResolvedValue(undefined),
+        resetToken: null,
+        resetTokenExpires: null as Date | null,
       };
       (User.findById as jest.Mock).mockResolvedValue(mockUser);
 
@@ -108,7 +110,8 @@ describe("userRepository", () => {
       expect(User.findById).toHaveBeenCalledWith("123");
       expect(mockUser.save).toHaveBeenCalledWith({ validateBeforeSave: false });
       expect(mockUser.resetToken).toBe("mocked-token");
-      expect(mockUser.resetTokenExpires).toBe(1234567890);
+      expect(mockUser.resetTokenExpires).toBeInstanceOf(Date);
+      expect(mockUser.resetTokenExpires?.getTime()).toBe(1234567890);
       expect(result).toEqual(mockUser);
     });
 
@@ -126,8 +129,9 @@ describe("userRepository", () => {
       const mockUser = {
         _id: "123",
         resetToken: "mocked-token",
-        resetTokenExpires: Date.now() + 10000,
+        resetTokenExpires: new Date(Date.now() + 10000),
         save: jest.fn().mockResolvedValue(undefined),
+        password: "",
       };
       (User.findById as jest.Mock).mockResolvedValue(mockUser);
       (bcrypt.hash as jest.Mock).mockResolvedValue("hashedpassword");
@@ -141,8 +145,8 @@ describe("userRepository", () => {
       expect(User.findById).toHaveBeenCalledWith("123");
       expect(bcrypt.hash).toHaveBeenCalledWith("newpassword123", 10);
       expect(mockUser.password).toBe("hashedpassword");
-      expect(mockUser.resetToken).toBeUndefined();
-      expect(mockUser.resetTokenExpires).toBeUndefined();
+      expect(mockUser.resetToken).toBeNull();
+      expect(mockUser.resetTokenExpires).toBeNull();
       expect(mockUser.save).toHaveBeenCalled();
       expect(result).toEqual(mockUser);
     });
@@ -151,7 +155,8 @@ describe("userRepository", () => {
       const mockUser = {
         _id: "123",
         resetToken: "mocked-token",
-        resetTokenExpires: Date.now() - 10000, // Expired token
+        resetTokenExpires: new Date(Date.now() - 10000),
+        save: jest.fn(),
       };
       (User.findById as jest.Mock).mockResolvedValue(mockUser);
 
