@@ -1,6 +1,41 @@
-import mongoose from "mongoose";
+import mongoose, { Model, Document } from "mongoose";
 import bcrypt from "bcryptjs";
 import validator from "validator";
+
+interface IUserDocument extends Document {
+  _id: mongoose.Types.ObjectId;
+  username: string;
+  email: string;
+  password: string;
+  itineraries: mongoose.Types.ObjectId[];
+  friends: mongoose.Types.ObjectId[];
+  resetToken: string | null;
+  resetTokenExpires: Date | null;
+  comparePassword(candidatePassword: string): Promise<boolean>;
+}
+
+interface IUserModel extends Model<IUserDocument> {
+  getPaginatedFriends(
+    userId: string,
+    page?: number,
+    limit?: number
+  ): Promise<{
+    data: mongoose.Types.ObjectId[];
+    page: number;
+    limit: number;
+    total: number;
+  }>;
+  getPaginatedItineraries(
+    userId: string,
+    page?: number,
+    limit?: number
+  ): Promise<{
+    data: mongoose.Types.ObjectId[];
+    page: number;
+    limit: number;
+    total: number;
+  }>;
+}
 
 const userSchema = new mongoose.Schema(
   {
@@ -26,7 +61,8 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
       validate: {
-        validator: function (v: string) {
+        validator: function (this: IUserDocument, v: string) {
+          if (!this.isModified("password")) return true;
           return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/.test(
             v
           );
@@ -39,14 +75,12 @@ const userSchema = new mongoose.Schema(
       {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Itinerary",
-        default: [],
       },
     ],
     friends: [
       {
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",
-        default: [],
       },
     ],
     resetToken: {
@@ -90,8 +124,8 @@ userSchema.methods.comparePassword = async function (
 // Transform the JSON response to exclude sensitive fields
 userSchema.set("toJSON", {
   transform: function (doc, ret) {
-    delete ret.password; // Remove password from the JSON response
-    delete ret.__v; // Remove version key
+    delete ret.password;
+    delete ret.__v;
     return ret;
   },
 });
@@ -102,21 +136,16 @@ userSchema.statics.getPaginatedFriends = async function (
   page = 1,
   limit = 10
 ) {
-  const skip = (page - 1) * limit;
+  const user = await this.findById(userId).populate("friends").exec();
+  if (!user) return { data: [], page, limit, total: 0 };
 
-  // Get the total count of friends
-  const total = await this.countDocuments({ _id: userId });
-
-  // Get paginated friends
-  const paginatedFriends = await this.findById(userId)
-    .populate({
-      path: "friends",
-      options: { limit, skip },
-    })
-    .exec();
+  const total = user.friends.length;
+  const start = (page - 1) * limit;
+  const end = start + limit;
+  const paginatedFriends = user.friends.slice(start, end);
 
   return {
-    data: paginatedFriends ? paginatedFriends.friends : [],
+    data: paginatedFriends,
     page,
     limit,
     total,
@@ -131,25 +160,26 @@ userSchema.statics.getPaginatedItineraries = async function (
 ) {
   const skip = (page - 1) * limit;
 
-  // Get the total count of itineraries
-  const total = await this.countDocuments({ _id: userId });
+  const user = await this.findById(userId).populate({ path: "itineraries" });
 
-  // Get paginated itineraries
-  const paginatedItineraries = await this.findById(userId)
-    .populate({
-      path: "itineraries",
-      options: { limit, skip },
-    })
-    .exec();
+  if (!user || !user.itineraries) {
+    return { data: [], page, limit, total: 0 };
+  }
+
+  const total = user.itineraries.length;
+
+  const paginatedItineraries = user.itineraries.slice(skip, skip + limit);
 
   return {
-    data: paginatedItineraries ? paginatedItineraries.itineraries : [],
+    data: paginatedItineraries,
     page,
     limit,
     total,
   };
 };
 
-const User = mongoose.models.User || mongoose.model("User", userSchema);
+const User =
+  (mongoose.models.User as IUserModel) ||
+  mongoose.model<IUserDocument, IUserModel>("User", userSchema);
 
 export default User;
