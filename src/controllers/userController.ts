@@ -2,15 +2,19 @@ import { NextRequest } from "next/server";
 import { sendError, sendSuccess } from "@/utils/apiResponse";
 import {
   registerUserService,
-  loginUserService,
-  resetPasswordService,
   getUserService,
   updateUserService,
   deleteUserService,
+} from "@/services/users/userService";
+import {
+  loginUserService,
+  resetPasswordService,
+} from "@/services/users/authService";
+import {
   getFriendsService,
   addFriendService,
   removeFriendService,
-} from "@/services/userService";
+} from "@/services/users/friendService";
 
 export async function registerUser(req: NextRequest) {
   try {
