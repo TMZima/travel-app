@@ -39,7 +39,7 @@ export async function saveResetToken(
   }
   user.resetToken = token;
   user.resetTokenExpires = expires;
-  await user.save();
+  await user.save({ validateBeforeSave: false });
   return user;
 }
 

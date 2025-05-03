@@ -1,4 +1,5 @@
 import { NextRequest } from "next/server";
+import mongoose from "mongoose";
 import jwt from "jsonwebtoken";
 import { dbConnect } from "@/config/db";
 import {
@@ -13,6 +14,7 @@ import {
   ConfigurationError,
   ConflictError,
   MalformedRequestError,
+  MongooseValidationError,
   NotFoundError,
 } from "@/utils/customErrors";
 import { getUserIdFromUrl } from "@/services/users/helperService";
@@ -46,27 +48,34 @@ export async function registerUserService(req: NextRequest) {
     throw new ConflictError("Email already in use");
   }
 
-  const newUser = await createUser({ username, email, password });
+  try {
+    const newUser = await createUser({ username, email, password });
 
-  const secret = process.env.JWT_SECRET;
-  if (!secret) {
-    throw new ConfigurationError(
-      "JWT secret is not set in environment variables"
-    );
+    const secret = process.env.JWT_SECRET;
+    if (!secret) {
+      throw new ConfigurationError(
+        "JWT secret is not set in environment variables"
+      );
+    }
+
+    const token = jwt.sign({ id: newUser._id }, secret, {
+      expiresIn: "7d",
+    });
+
+    return {
+      user: {
+        _id: newUser._id,
+        username: newUser.username,
+        email: newUser.email,
+      },
+      token,
+    };
+  } catch (err) {
+    if (err instanceof mongoose.Error.ValidationError) {
+      throw new MongooseValidationError(err);
+    }
+    throw err;
   }
-
-  const token = jwt.sign({ id: newUser._id }, secret, {
-    expiresIn: "7d",
-  });
-
-  return {
-    user: {
-      _id: newUser._id,
-      username: newUser.username,
-      email: newUser.email,
-    },
-    token,
-  };
 }
 
 // --- Get User ---
