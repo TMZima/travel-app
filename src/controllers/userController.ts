@@ -1,4 +1,5 @@
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { serialize } from "cookie";
 import { sendError, sendSuccess } from "@/utils/apiResponse";
 import {
   registerUserService,
@@ -18,8 +19,22 @@ import {
 
 export async function registerUser(req: NextRequest) {
   try {
-    const response = await registerUserService(req);
-    return sendSuccess(response, 201);
+    const { token, user } = await registerUserService(req);
+
+    const response = NextResponse.json({ user });
+
+    response.headers.set(
+      "Set-Cookie",
+      serialize("token", token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "strict",
+        maxAge: 7 * 24 * 60 * 60,
+        path: "/",
+      })
+    );
+
+    return NextResponse.redirect(new URL("/", req.url));
   } catch (err) {
     return sendError(err);
   }
@@ -27,8 +42,21 @@ export async function registerUser(req: NextRequest) {
 
 export async function loginUser(req: NextRequest) {
   try {
-    const response = await loginUserService(req);
-    return sendSuccess(response, 200);
+    const { token, user } = await loginUserService(req);
+
+    const response = NextResponse.json({ user });
+
+    response.headers.set(
+      "Set-Cookie",
+      serialize("token", token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "strict",
+        maxAge: 7 * 24 * 60 * 60,
+        path: "/",
+      })
+    );
+    return sendSuccess({ user }, 200);
   } catch (err) {
     return sendError(err);
   }
