@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { handleApiError } from "./errorHandler";
+import { handleApiError } from "./apiErrorHandler";
 
 // Success response
 export function sendSuccess(

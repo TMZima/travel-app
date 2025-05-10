@@ -1,5 +1,5 @@
 import { sendSuccess, sendError } from "../apiResponse";
-import { handleApiError } from "../errorHandler";
+import { handleApiError } from "../apiErrorHandler";
 import { NextResponse } from "next/server";
 
 // Mock dependencies

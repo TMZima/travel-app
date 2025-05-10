@@ -11,14 +11,19 @@ export interface IAccommodation extends Document {
   belongsTo: mongoose.Types.ObjectId;
   createdAt: Date;
   editedAt: Date;
+  duration?: number; // Virtual field for duration of stay
 }
 
 const accommodationSchema = new Schema<IAccommodation>(
   {
-    type: { type: String, required: true },
+    type: {
+      type: String,
+      required: true,
+      enum: ["Hotel", "Airbnb", "Hostel", "Other"],
+    },
     name: { type: String, required: true },
     address: { type: String, required: true },
-    confirmationNumber: { type: String },
+    confirmationNumber: { type: String, default: "" },
     checkInDate: { type: Date, required: true },
     checkOutDate: { type: Date, required: true },
     location: { type: String, required: true },
@@ -30,6 +35,18 @@ const accommodationSchema = new Schema<IAccommodation>(
   },
   { timestamps: { createdAt: "createdAt", updatedAt: "editedAt" } }
 );
+
+// Virtual field - calculating the duration of the stay
+accommodationSchema.virtual("duration").get(function (this: IAccommodation) {
+  const checkIn = this.checkInDate ? new Date(this.checkInDate) : null;
+  const checkOut = this.checkOutDate ? new Date(this.checkOutDate) : null;
+  if (checkIn && checkOut) {
+    return Math.ceil(
+      (checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24)
+    );
+  }
+  return null;
+});
 
 export const Accommodation = mongoose.model<IAccommodation>(
   "Accommodation",

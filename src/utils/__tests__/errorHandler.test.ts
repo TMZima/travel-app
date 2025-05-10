@@ -1,4 +1,4 @@
-import { handleApiError } from "../errorHandler";
+import { handleApiError } from "../apiErrorHandler";
 import { AppError } from "../customErrors";
 
 describe("handleApiError", () => {
