@@ -2,7 +2,7 @@ import mongoose, { Model, Document } from "mongoose";
 import bcrypt from "bcryptjs";
 import validator from "validator";
 
-interface IUserDocument extends Document {
+export interface IUserDocument extends Document {
   _id: mongoose.Types.ObjectId;
   username: string;
   email: string;

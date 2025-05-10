@@ -17,7 +17,9 @@ import {
   MongooseValidationError,
   NotFoundError,
 } from "@/utils/customErrors";
-import { getUserIdFromUrl } from "@/services/users/helperService";
+import { getJwtSecret, getUserIdFromUrl } from "@/utils/helperService";
+import { IUserDocument } from "@/models/userModel";
+import { validateObjectId } from "@/utils/helperRepository";
 
 // --- Interfaces ---
 interface RegisterRequestBody {
@@ -26,15 +28,39 @@ interface RegisterRequestBody {
   password: string;
 }
 
-// --- Register ---
-export async function registerUserService(req: NextRequest) {
+interface RegisterUserResponse {
+  user: {
+    _id: string;
+    username: string;
+    email: string;
+  };
+  token: string;
+}
+
+interface UpdateUserResponse {
+  user: IUserDocument;
+}
+
+/**
+ * Register a new user
+ * @param req - The Next.js request object
+ * @returns An object containing the registered user's details and a JWT token
+ * @throws MalformedRequestError if the request body is invalid
+ * @throws BadRequestError if any required fields are missing
+ * @throws ConflictError if the email is already in use
+ * @throws ConfigurationError if the JWT secret is not set
+ * @throws MongooseValidationError if there is a validation error
+ */
+export async function registerUserService(
+  req: NextRequest
+): Promise<RegisterUserResponse> {
   await dbConnect();
 
   let requestBody: RegisterRequestBody;
   try {
     requestBody = await req.json();
   } catch {
-    throw new MalformedRequestError();
+    throw new MalformedRequestError("Invalid JSON in request body");
   }
 
   const { username, email, password } = requestBody;
@@ -48,15 +74,10 @@ export async function registerUserService(req: NextRequest) {
     throw new ConflictError("Email already in use");
   }
 
+  const secret = getJwtSecret();
+
   try {
     const newUser = await createUser({ username, email, password });
-
-    const secret = process.env.JWT_SECRET;
-    if (!secret) {
-      throw new ConfigurationError(
-        "JWT secret is not set in environment variables"
-      );
-    }
 
     const token = jwt.sign({ id: newUser._id }, secret, {
       expiresIn: "7d",
@@ -64,7 +85,7 @@ export async function registerUserService(req: NextRequest) {
 
     return {
       user: {
-        _id: newUser._id,
+        _id: newUser._id.toString(),
         username: newUser.username,
         email: newUser.email,
       },
@@ -78,8 +99,13 @@ export async function registerUserService(req: NextRequest) {
   }
 }
 
-// --- Get User ---
-export async function getUserService(req: NextRequest) {
+/**
+ * Fetch a user by ID
+ * @param req - The Next.js request object
+ * @returns The user object
+ * @throws NotFoundError if the user is not found
+ */
+export async function getUserService(req: NextRequest): Promise<IUserDocument> {
   await dbConnect();
 
   const userId = getUserIdFromUrl(req);
@@ -92,8 +118,15 @@ export async function getUserService(req: NextRequest) {
   return user;
 }
 
-// --- Update User ---
-export async function updateUserService(req: NextRequest) {
+/**
+ * Update a user by ID
+ * @param req - The Next.js request object
+ * @returns An object containing the updated user details
+ * @throws NotFoundError if the user is not found
+ */
+export async function updateUserService(
+  req: NextRequest
+): Promise<UpdateUserResponse> {
   await dbConnect();
 
   const userId = getUserIdFromUrl(req);
@@ -107,11 +140,23 @@ export async function updateUserService(req: NextRequest) {
   return { user: updatedUser };
 }
 
-// --- Delete User ---
-export async function deleteUserService(req: NextRequest) {
+/**
+ * Delete a user by ID
+ * @param req - The Next.js request object
+ * @returns A message indicating that the user was deleted successfully
+ * @throws NotFoundError if the user is not found
+ */
+export async function deleteUserService(
+  req: NextRequest
+): Promise<{ message: string }> {
   await dbConnect();
 
   const userId = getUserIdFromUrl(req);
+  if (!userId) {
+    throw new BadRequestError("User ID is required");
+  }
+
+  validateObjectId(userId, "Invalid user ID");
 
   const deletedUser = await deleteUserById(userId);
   if (!deletedUser) {

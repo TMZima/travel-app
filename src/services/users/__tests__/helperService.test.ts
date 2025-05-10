@@ -1,4 +1,4 @@
-import { getUserIdFromUrl } from "../helperService";
+import { getUserIdFromUrl } from "../../../utils/helperService";
 import { BadRequestError } from "@/utils/customErrors";
 
 describe("getUserIdFromUrl", () => {

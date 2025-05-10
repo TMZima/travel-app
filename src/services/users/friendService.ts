@@ -1,21 +1,28 @@
 import { NextRequest } from "next/server";
 import { ObjectId } from "mongodb";
 import { dbConnect } from "@/config/db";
-import { findUserById } from "@/repositories/userRepository";
+import { findUserById, updateUserById } from "@/repositories/userRepository";
 import {
   BadRequestError,
   ConflictError,
   NotFoundError,
 } from "@/utils/customErrors";
-import { getUserIdFromUrl } from "@/services/users/helperService";
+import { getUserIdFromUrl } from "@/utils/helperService";
 
 // --- Interfaces ---
 interface FriendRequestBody {
   friendId: string;
 }
 
-// --- Get Friends ---
-export async function getFriendsService(req: NextRequest) {
+/**
+ * Get a user's friends
+ * @param req - The Next.js request object
+ * @returns An object containing the user's friends
+ * @throws NotFoundError if the user is not found
+ */
+export async function getFriendsService(
+  req: NextRequest
+): Promise<{ friends: ObjectId[] }> {
   await dbConnect();
   const userId = getUserIdFromUrl(req);
 
@@ -25,8 +32,17 @@ export async function getFriendsService(req: NextRequest) {
   return { friends: user.friends };
 }
 
-// --- Add Friend ---
-export async function addFriendService(req: NextRequest) {
+/**
+ * Add a friend to the user's friend list
+ * @param req - The Next.js request object
+ * @returns A success message
+ * @throws BadRequestError if the friend ID is missing or invalid
+ * @throws NotFoundError if the user is not found
+ * @throws ConflictError if the friend already exists
+ */
+export async function addFriendService(
+  req: NextRequest
+): Promise<{ message: string }> {
   await dbConnect();
   const userId = getUserIdFromUrl(req);
   const { friendId }: FriendRequestBody = await req.json();
@@ -46,13 +62,21 @@ export async function addFriendService(req: NextRequest) {
     throw new ConflictError("Friend already exists");
 
   user.friends.push(friendObjectId);
-  await user.save();
+  await updateUserById(userId, { friends: user.friends });
 
   return { message: "Friend added successfully" };
 }
 
-// --- Remove Friend ---
-export async function removeFriendService(req: NextRequest) {
+/**
+ * Remove a friend from a user's friend list
+ * @param req - The Next.js request object
+ * @returns A success message
+ * @throws BadRequestError if the friend ID is missing or invalid
+ * @throws NotFoundError if the user or friend is not found
+ */
+export async function removeFriendService(
+  req: NextRequest
+): Promise<{ message: string }> {
   await dbConnect();
   const userId = getUserIdFromUrl(req);
   const { friendId }: FriendRequestBody = await req.json();
@@ -75,7 +99,7 @@ export async function removeFriendService(req: NextRequest) {
   user.friends = user.friends.filter(
     (id: ObjectId) => !id.equals(friendObjectId)
   );
-  await user.save();
+  await updateUserById(userId, { friends: user.friends });
 
   return { message: "Friend removed successfully" };
 }

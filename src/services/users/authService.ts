@@ -12,6 +12,7 @@ import {
   NotFoundError,
   UnauthorizedError,
 } from "@/utils/customErrors";
+import { getJwtSecret } from "../../utils/helperService";
 
 // --- Interfaces ---.
 interface LoginRequestBody {
@@ -28,8 +29,26 @@ interface UpdatePasswordRequestBody {
   newPassword: string;
 }
 
-// --- Login ---
-export async function loginUserService(req: NextRequest) {
+interface LoginResponse {
+  token: string;
+  user: {
+    id: string;
+    email: string;
+    username: string;
+  };
+}
+
+/**
+ * Login a user
+ * @param req - The Next.js request object
+ * @returns An object containing the user's token and basic user details
+ * @throws BadRequestError if email or password is missing
+ * @throws UnauthorizedError if the email or password is invalid
+ * @throws ConfigurationError if JWT secret is not set
+ */
+export async function loginUserService(
+  req: NextRequest
+): Promise<LoginResponse> {
   await dbConnect();
 
   const { email, password }: LoginRequestBody = await req.json();
@@ -40,25 +59,33 @@ export async function loginUserService(req: NextRequest) {
 
   const user = await findUserByEmail(email);
   if (!user || !(await user.comparePassword(password))) {
-    throw new BadRequestError("Invalid email or password");
+    throw new UnauthorizedError("Invalid email or password");
   }
 
-  const secret = process.env.JWT_SECRET;
-  if (!secret) {
-    throw new ConfigurationError(
-      "JWT secret is not set in environment variables"
-    );
-  }
-
+  const secret = getJwtSecret();
   const token = jwt.sign({ id: user._id }, secret, { expiresIn: "7d" });
+
   return {
     token,
-    user: { id: user._id, email: user.email, username: user.username },
+    user: {
+      id: user._id.toString(),
+      email: user.email,
+      username: user.username,
+    },
   };
 }
 
-// --- Request Password Reset ---
-export async function resetPasswordService(req: NextRequest) {
+/**
+ * Request a password reset
+ * @param req - The Next.js request object
+ * @returns A message indicating that the password reset email has been sent
+ * @throws BadRequestError if email is missing
+ * @throws NotFoundError if the user with the provided email does not exist
+ * @throws ConfigurationError if JWT secret is not set
+ */
+export async function resetPasswordService(
+  req: NextRequest
+): Promise<{ message: string }> {
   await dbConnect();
 
   const { email }: ResetPasswordRequestBody = await req.json();
@@ -68,16 +95,10 @@ export async function resetPasswordService(req: NextRequest) {
 
   const user = await findUserByEmail(email);
   if (!user) {
-    throw new NotFoundError("User not found");
+    throw new NotFoundError("No user found with the provided email");
   }
 
-  // Generate a password reset token (e.g., using JWT)
-  const secret = process.env.JWT_SECRET;
-  if (!secret) {
-    throw new ConfigurationError(
-      "JWT secret is not set in environment variables"
-    );
-  }
+  const secret = getJwtSecret();
   const resetToken = jwt.sign(
     { id: user._id, type: "password-reset" },
     secret,
@@ -86,7 +107,6 @@ export async function resetPasswordService(req: NextRequest) {
     }
   );
 
-  // Save the reset token to the database or send it via email
   await saveResetToken(
     user._id.toString(),
     resetToken,
@@ -96,8 +116,17 @@ export async function resetPasswordService(req: NextRequest) {
   return { message: "Password reset email sent" };
 }
 
-// --- Verify Reset Token & Update Password ---
-export async function updatePasswordService(req: NextRequest) {
+/**
+ * Verify reset token and update password
+ * @param req - The Next.js request object
+ * @returns A message indicating that the password has been updated
+ * @throws BadRequestError if token or new password is missing
+ * @throws UnauthorizedError if the token is invalid or expired
+ * @throws ConfigurationError if JWT secret is not set
+ */
+export async function updatePasswordService(
+  req: NextRequest
+): Promise<{ message: string }> {
   await dbConnect();
   const { token, newPassword }: UpdatePasswordRequestBody = await req.json();
 
@@ -105,8 +134,7 @@ export async function updatePasswordService(req: NextRequest) {
     throw new BadRequestError("Token and new password are required");
   }
 
-  const secret = process.env.JWT_SECRET;
-  if (!secret) throw new ConfigurationError("JWT secret is not set");
+  const secret = getJwtSecret();
 
   let decoded;
   try {

@@ -1,6 +1,7 @@
-import mongoose from "mongoose";
+import mongoose, { Model } from "mongoose";
 
 export interface IItinerary extends Document {
+  _id: mongoose.Types.ObjectId;
   createdBy: mongoose.Types.ObjectId;
   title: string;
   startDate: Date;
@@ -14,7 +15,6 @@ export interface IItinerary extends Document {
 }
 
 export type ItineraryData = Omit<IItinerary, "createdAt" | "updatedAt" | "_id">;
-
 export type ItineraryUpdateData = Partial<ItineraryData>;
 
 const itinerarySchema = new mongoose.Schema(
@@ -64,6 +64,9 @@ const itinerarySchema = new mongoose.Schema(
   }
 );
 
-const Itinerary = mongoose.model<IItinerary>("Itinerary", itinerarySchema);
+const Itinerary: Model<IItinerary> = mongoose.model<IItinerary>(
+  "Itinerary",
+  itinerarySchema
+);
 
 export default Itinerary;
