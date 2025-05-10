@@ -9,7 +9,12 @@ import {
 } from "@/repositories/itineraryRepository";
 import { BadRequestError, NotFoundError } from "@/utils/customErrors";
 
-export async function createItineraryService(data: ItineraryData) {
+/**
+ * Create a new itinerary
+ */
+export async function createItineraryService(
+  data: ItineraryData
+): Promise<ItineraryData> {
   if (!data.title || !data.startDate || !data.endDate || !data.createdBy) {
     throw new BadRequestError(
       "Missing required fields",
@@ -20,7 +25,10 @@ export async function createItineraryService(data: ItineraryData) {
   return await createItinerary(data);
 }
 
-export async function getItineraryService(id: string) {
+/**
+ * Fetch an itinerary by its ID
+ */
+export async function getItineraryService(id: string): Promise<ItineraryData> {
   const itinerary = await getItineraryById(id);
   if (!itinerary) {
     throw new NotFoundError(
@@ -34,7 +42,7 @@ export async function getItineraryService(id: string) {
 export async function updateItineraryService(
   id: string,
   data: ItineraryUpdateData
-) {
+): Promise<ItineraryData> {
   const updatedItinerary = await updateItineraryById(id, data);
   if (!updatedItinerary) {
     throw new NotFoundError(
@@ -45,7 +53,12 @@ export async function updateItineraryService(
   return updatedItinerary;
 }
 
-export async function deleteItineraryService(id: string) {
+/**
+ * Delete an itinerary by its ID
+ */
+export async function deleteItineraryService(
+  id: string
+): Promise<{ message: string }> {
   const deletedItinerary = await deleteItineraryById(id);
   if (!deletedItinerary) {
     throw new NotFoundError(
@@ -56,11 +69,18 @@ export async function deleteItineraryService(id: string) {
   return { message: "Itinerary deleted successfully" };
 }
 
+/**
+ * Fetch all itineraries for a specific user
+ * @param userId - The ID of the user
+ * @param page - The page number for pagination
+ * @param limit - The number of itineraries to fetch per page
+ * @returns An array of itineraries
+ */
 export async function getAllItinerariesService(
   userId: string,
   page = 1,
   limit = 10
-) {
+): Promise<ItineraryData[]> {
   const skip = (page - 1) * limit;
   const itineraries = await getAllItinerariesByUser(userId, skip, limit);
   if (!itineraries || itineraries.length === 0) {

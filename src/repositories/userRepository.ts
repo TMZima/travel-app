@@ -1,10 +1,16 @@
 import User from "@/models/userModel";
 import bcrypt from "bcryptjs";
 
+/**
+ * Find a user by email
+ */
 export async function findUserByEmail(email: string) {
   return await User.findOne({ email });
 }
 
+/**
+ * Create a new user
+ */
 export async function createUser(data: {
   username: string;
   email: string;
@@ -13,10 +19,16 @@ export async function createUser(data: {
   return await User.create(data);
 }
 
+/**
+ * Find a user by ID
+ */
 export async function findUserById(id: string) {
   return await User.findById(id).select("-password");
 }
 
+/**
+ * Update a specific user
+ */
 export async function updateUserById(id: string, data: any) {
   return await User.findByIdAndUpdate(id, data, {
     new: true,
@@ -24,10 +36,16 @@ export async function updateUserById(id: string, data: any) {
   }).select("-password");
 }
 
+/**
+ * Delete a user by ID
+ */
 export async function deleteUserById(id: string) {
   return await User.findByIdAndDelete(id);
 }
 
+/**
+ * Save a password reset token for a user
+ */
 export async function saveResetToken(
   userId: string,
   token: string,
@@ -43,6 +61,9 @@ export async function saveResetToken(
   return user;
 }
 
+/**
+ * Update a user's password using a reset token
+ */
 export async function updateUserPassword(
   userId: string,
   newPassword: string,

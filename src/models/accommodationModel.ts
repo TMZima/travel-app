@@ -11,6 +11,7 @@ export interface IAccommodation extends Document {
   belongsTo: mongoose.Types.ObjectId;
   createdAt: Date;
   editedAt: Date;
+  createdBy: mongoose.Types.ObjectId;
   duration?: number; // Virtual field for duration of stay
 }
 
@@ -32,6 +33,11 @@ const accommodationSchema = new Schema<IAccommodation>(
       ref: "Itinerary",
       required: true,
     },
+    createdBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
   },
   { timestamps: { createdAt: "createdAt", updatedAt: "editedAt" } }
 );
@@ -48,7 +54,9 @@ accommodationSchema.virtual("duration").get(function (this: IAccommodation) {
   return null;
 });
 
-export const Accommodation = mongoose.model<IAccommodation>(
+const Accommodation = mongoose.model<IAccommodation>(
   "Accommodation",
   accommodationSchema
 );
+
+export default Accommodation;

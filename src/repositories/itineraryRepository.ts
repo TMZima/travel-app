@@ -4,10 +4,16 @@ import Itinerary, {
   ItineraryUpdateData,
 } from "@/models/itineraryModel";
 
+/**
+ * Create a new itinerary
+ */
 export async function createItinerary(data: ItineraryData) {
   return await Itinerary.create(data);
 }
 
+/**
+ * Get an itinerary by ID
+ */
 export async function getItineraryById(id: string) {
   return await Itinerary.findById(id)
     .populate("createdBy", "username email")
@@ -15,6 +21,9 @@ export async function getItineraryById(id: string) {
     .populate("pointsOfInterest");
 }
 
+/**
+ * Update an itinerary by ID
+ */
 export async function updateItineraryById(
   id: string,
   data: ItineraryUpdateData
@@ -28,10 +37,16 @@ export async function updateItineraryById(
     .populate("pointsOfInterest");
 }
 
+/**
+ * Delete an itinerary by ID
+ */
 export async function deleteItineraryById(id: string) {
   return await Itinerary.findByIdAndDelete(id);
 }
 
+/**
+ * Get all itineraries for a specific user
+ */
 export async function getAllItinerariesByUser(
   userId: string | mongoose.Types.ObjectId,
   skip = 0,
