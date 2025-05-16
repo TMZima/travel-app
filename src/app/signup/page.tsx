@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-export default function Home() {
+export default function Signup() {
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-between">
       {/* Hero Section */}
@@ -26,38 +26,47 @@ export default function Home() {
       {/* Main Content */}
       <main className="flex flex-col items-center justify-center flex-grow px-6 py-12">
         <div className="text-center">
-          <h2 className="text-2xl font-semibold text-gray-800">
-            Your Next Adventure Awaits
-          </h2>
+          <h2 className="text-2xl font-semibold text-gray-800">Sign Up</h2>
           <p className="mt-4 text-gray-600">
-            Start planning your dream trip today with TravelApp.
+            Join our community and start exploring the world with TravelApp.
           </p>
         </div>
 
-        {/* Call-to-Action Buttons */}
-        <div className="mt-8 flex flex-col sm:flex-row gap-4">
-          <Link
-            href="/signup"
-            className="px-6 py-3 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 transition transform hover:scale-105 flex items-center justify-center"
-            aria-label="Sign up for TravelApp"
+        {/* Signup Form */}
+        <form className="mt-8 flex flex-col gap-4 w-full max-w-md">
+          <input
+            type="text"
+            placeholder="Username"
+            className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+          />
+          <input
+            type="email"
+            placeholder="Email"
+            className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+          />
+          <input
+            type="password"
+            placeholder="Password"
+            className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+          />
+          <button
+            type="submit"
+            className="px-6 py-3 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 transition"
           >
-            Get Started
-          </Link>
-          <Link
-            href="/login"
-            className="px-6 py-3 bg-gray-300 text-gray-800 rounded-lg shadow hover:bg-gray-400 transition transform hover:scale-105 flex items-center justify-center"
-            aria-label="Log in to TravelApp"
-          >
-            Log In
-          </Link>
-        </div>
+            Sign Up
+          </button>
+          <p className="mt-4 text-sm text-gray-600">
+            Already have an account?{" "}
+            <Link href="/login" className="text-blue-600 hover:underline">
+              Log In
+            </Link>
+          </p>
+        </form>
       </main>
 
       {/* Footer */}
       <footer className="w-full bg-gray-800 text-white py-6 text-center">
-        <p className="text-sm">
-          © {new Date().getFullYear()} TravelApp. All rights reserved.
-        </p>
+        <p>&copy; {new Date().getFullYear()} TravelApp. All rights reserved.</p>
         <div className="mt-4 flex justify-center gap-4">
           <Link
             href="/about"
