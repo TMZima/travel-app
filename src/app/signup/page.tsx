@@ -1,6 +1,60 @@
+"use client";
+import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import axios from "axios";
+import toast from "react-hot-toast";
 
 export default function Signup() {
+  const router = useRouter();
+  const [user, setUser] = useState({
+    username: "",
+    email: "",
+    password: "",
+  });
+  const [buttonDisabled, setButtonDisabled] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  const handleChange = (evt: React.ChangeEvent<HTMLInputElement>) => {
+    setUser({ ...user, [evt.target.name]: evt.target.value });
+  };
+
+  const handleSubmit = async (evt: React.FormEvent) => {
+    evt.preventDefault();
+
+    try {
+      setLoading(true);
+      const response = await axios.post("/api/users/signup", user);
+      console.log("Signup success", response.data);
+      toast.success(
+        `Welcome aboard, ${user.username}! Your journey begins now!`
+      );
+      router.push("/");
+    } catch (err: any) {
+      console.error("Signup failed:", err.message);
+      const message =
+        err.response?.data?.message ||
+        err.response?.data?.error ||
+        err.message ||
+        "Signup failed. Please try again.";
+      toast.error(message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (
+      user.email.length > 0 &&
+      user.password.length > 0 &&
+      user.username.length > 0
+    ) {
+      setButtonDisabled(false);
+    } else {
+      setButtonDisabled(true);
+    }
+  }, [user]);
+
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-between">
       {/* Hero Section */}
@@ -33,27 +87,44 @@ export default function Signup() {
         </div>
 
         {/* Signup Form */}
-        <form className="mt-8 flex flex-col gap-4 w-full max-w-md">
+        <form
+          className="mt-8 flex flex-col gap-4 w-full max-w-md"
+          onSubmit={handleSubmit}
+        >
           <input
             type="text"
+            name="username"
             placeholder="Username"
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+            value={user.username}
+            onChange={handleChange}
+            className="px-4 py-2 border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
           />
           <input
             type="email"
+            name="email"
             placeholder="Email"
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+            value={user.email}
+            onChange={handleChange}
+            className="px-4 py-2 border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
           />
           <input
             type="password"
+            name="password"
             placeholder="Password"
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+            value={user.password}
+            onChange={handleChange}
+            className="px-4 py-2 border border-gray-300 bg-white text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
           />
           <button
             type="submit"
-            className="px-6 py-3 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 transition"
+            className="px-6 py-3 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={buttonDisabled}
           >
-            Sign Up
+            {loading
+              ? "Singing Up..."
+              : buttonDisabled
+              ? "Please complete all fields"
+              : "Sign Up"}
           </button>
           <p className="mt-4 text-sm text-gray-600">
             Already have an account?{" "}

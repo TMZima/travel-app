@@ -8,7 +8,6 @@ import {
 } from "@/repositories/userRepository";
 import {
   BadRequestError,
-  ConfigurationError,
   NotFoundError,
   UnauthorizedError,
 } from "@/utils/customErrors";

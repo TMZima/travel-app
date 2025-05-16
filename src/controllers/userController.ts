@@ -16,6 +16,7 @@ import {
   addFriendService,
   removeFriendService,
 } from "@/services/users/friendService";
+import { getUserIdFromUrl } from "@/utils/helperService";
 
 /**
  * Register a new user
@@ -110,7 +111,9 @@ export async function getUser(req: NextRequest): Promise<NextResponse> {
  */
 export async function updateUser(req: NextRequest): Promise<NextResponse> {
   try {
-    const response = await updateUserService(req);
+    const userId = getUserIdFromUrl(req);
+    const body = await req.json();
+    const response = await updateUserService(userId, body);
     return sendSuccess(response, 200, "User updated successfully");
   } catch (err) {
     return sendError(err);

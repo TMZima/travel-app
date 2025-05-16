@@ -11,9 +11,7 @@ import {
 } from "@/repositories/userRepository";
 import {
   BadRequestError,
-  ConfigurationError,
   ConflictError,
-  MalformedRequestError,
   MongooseValidationError,
   NotFoundError,
 } from "@/utils/customErrors";
@@ -52,18 +50,11 @@ interface UpdateUserResponse {
  * @throws MongooseValidationError if there is a validation error
  */
 export async function registerUserService(
-  req: NextRequest
+  body: RegisterRequestBody
 ): Promise<RegisterUserResponse> {
   await dbConnect();
 
-  let requestBody: RegisterRequestBody;
-  try {
-    requestBody = await req.json();
-  } catch {
-    throw new MalformedRequestError("Invalid JSON in request body");
-  }
-
-  const { username, email, password } = requestBody;
+  const { username, email, password } = body;
 
   if (!username || !email || !password) {
     throw new BadRequestError("All fields are required");
@@ -125,14 +116,12 @@ export async function getUserService(req: NextRequest): Promise<IUserDocument> {
  * @throws NotFoundError if the user is not found
  */
 export async function updateUserService(
-  req: NextRequest
+  userId: string,
+  body: Partial<IUserDocument>
 ): Promise<UpdateUserResponse> {
   await dbConnect();
 
-  const userId = getUserIdFromUrl(req);
-  const requestBody = await req.json();
-
-  const updatedUser = await updateUserById(userId, requestBody);
+  const updatedUser = await updateUserById(userId, body);
   if (!updatedUser) {
     throw new NotFoundError("User not found");
   }
