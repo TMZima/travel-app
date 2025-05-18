@@ -46,17 +46,18 @@ interface LoginResponse {
  * @throws ConfigurationError if JWT secret is not set
  */
 export async function loginUserService(
-  req: NextRequest
+  body: LoginRequestBody
 ): Promise<LoginResponse> {
   await dbConnect();
 
-  const { email, password }: LoginRequestBody = await req.json();
+  const { email, password }: LoginRequestBody = body;
 
   if (!email || !password) {
     throw new BadRequestError("Email and password are required");
   }
 
   const user = await findUserByEmail(email);
+
   if (!user || !(await user.comparePassword(password))) {
     throw new UnauthorizedError("Invalid email or password");
   }

@@ -28,7 +28,7 @@ export async function registerUser(req: NextRequest): Promise<NextResponse> {
     const body = await req.json();
     const { token, user } = await registerUserService(body);
 
-    const response = NextResponse.json({ user });
+    const response = sendSuccess(user, 201, "User registered successfully");
 
     response.headers.set(
       "Set-Cookie",
@@ -41,7 +41,7 @@ export async function registerUser(req: NextRequest): Promise<NextResponse> {
       })
     );
 
-    return sendSuccess(user, 201, "User registered successfully");
+    return response;
   } catch (err) {
     return sendError(err);
   }
@@ -57,7 +57,7 @@ export async function loginUser(req: NextRequest): Promise<NextResponse> {
     const body = await req.json();
     const { token, user } = await loginUserService(body);
 
-    const response = NextResponse.json({ user });
+    const response = sendSuccess(user, 200, "User logged in successfully");
 
     response.headers.set(
       "Set-Cookie",
@@ -69,7 +69,7 @@ export async function loginUser(req: NextRequest): Promise<NextResponse> {
         path: "/",
       })
     );
-    return sendSuccess(user, 200, "User logged in successfully");
+    return response;
   } catch (err) {
     return sendError(err);
   }

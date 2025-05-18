@@ -1,38 +1,51 @@
 import { NextRequest, NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
 
-const PUBLIC_PATHS = ["/", "/login", "/signup", "/public", "/api/public"];
+// List of routes that do NOT require authentication
+const PUBLIC_PATHS = ["/", "/login", "/signup"];
 
-export function middleware(req: NextRequest) {
+/**
+ * Next.js middleware to handle authentication and route protection.
+ * - Redirects authenticated users away from /login and /signup.
+ * - Allows public paths for everyone.
+ * - Redirects unauthenticated users to /login for protected routes.
+ * @param req - The incoming Next.js request
+ * @returns NextResponse for routing or redirection
+ */
+export function middleware(req: NextRequest): NextResponse | undefined {
   const { pathname } = req.nextUrl;
+  const token = req.cookies.get("token")?.value;
 
-  // Allow public paths without authentication
-  if (PUBLIC_PATHS.some((path) => pathname.startsWith(path))) {
+  // 1. Allow static/public paths for everyone
+  if (PUBLIC_PATHS.includes(pathname) || pathname.startsWith("/api/public")) {
+    if (token && (pathname === "/login" || pathname === "/signup")) {
+      try {
+        jwt.verify(token, process.env.JWT_SECRET!);
+        return NextResponse.redirect(new URL("/dashboard", req.url));
+      } catch {
+        // Invalid token, let them see login/signup
+        return NextResponse.next();
+      }
+    }
     return NextResponse.next();
   }
 
-  // Check for authentication token in cookies for protected paths
-  const token = req.cookies.get("token")?.value;
-
+  // 2. For protected paths, require authentication
   if (!token) {
-    // Redirect unauthenticated users to login page
     return NextResponse.redirect(new URL("/login", req.url));
   }
 
   try {
     jwt.verify(token, process.env.JWT_SECRET!);
-
-    // If valid token, proceed to the requested page
     return NextResponse.next();
-  } catch (err: unknown) {
-    console.error("Invalid token:", err instanceof Error ? err.message : err);
-
-    // Redirect invalid tokens to the login page
+  } catch {
     return NextResponse.redirect(new URL("/login", req.url));
   }
 }
 
+/**
+ * Middleware config: apply to all routes except static files or API routes.
+ */
 export const config = {
-  // Regex to match everything except the defined public paths
-  matcher: ["/((?!api/public|login|signup|public).*)"],
+  matcher: ["/((?!api|_next|static|.*\\..*).*)"],
 };

@@ -77,7 +77,7 @@ export class InternalServerError extends AppError {
 export class UnauthorizedError extends AppError {
   constructor(
     message = "Unauthorized access",
-    userMessage = "You do not have permission to access this resource"
+    userMessage = "Invalid email or password"
   ) {
     super(message, 401, userMessage);
   }
