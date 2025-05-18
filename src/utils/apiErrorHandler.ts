@@ -10,7 +10,6 @@ export function handleApiError(err: unknown) {
     return {
       status: err.statusCode,
       body: {
-        error: err.message,
         message: err.userMessage,
         status: err.statusCode,
         code: err.constructor.name,
@@ -23,7 +22,6 @@ export function handleApiError(err: unknown) {
   return {
     status: 500,
     body: {
-      error: "Internal server error",
       message: "An unexpected error occurred. Please try again later.",
       status: 500,
       stackTrace:

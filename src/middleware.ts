@@ -1,26 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { jwtVerify, JWTPayload } from "jose";
+import { getUserFromToken } from "@/utils/auth"; // Use your shared JWT utility
 
 const PUBLIC_PATHS: string[] = ["/", "/login", "/signup"];
-
-/**
- * Verifies a JWT token using the provided secret.
- * @param {string} token - The JWT token to verify.
- * @param {string} secret - The secret key for verification.
- * @returns {Promise<JWTPayload | null>} - The decoded payload if valid, otherwise null.
- */
-async function verifyJWT(
-  token: string,
-  secret: string
-): Promise<JWTPayload | null> {
-  const secretKey = new TextEncoder().encode(secret);
-  try {
-    const { payload } = await jwtVerify(token, secretKey);
-    return payload;
-  } catch (err) {
-    return null;
-  }
-}
 
 /**
  * Next.js middleware for authentication and route protection.
@@ -34,19 +15,12 @@ export async function middleware(req: NextRequest): Promise<NextResponse> {
   const { pathname } = req.nextUrl;
   const token = req.cookies.get("token")?.value;
 
-  // Logging for debugging
-  console.log("MIDDLEWARE: pathname:", pathname);
-  console.log("MIDDLEWARE: token:", token);
-  console.log("MIDDLEWARE: JWT_SECRET:", process.env.JWT_SECRET);
-
   if (PUBLIC_PATHS.includes(pathname) || pathname.startsWith("/api/public")) {
     if (token && (pathname === "/login" || pathname === "/signup")) {
-      const decoded = await verifyJWT(token, process.env.JWT_SECRET!);
+      const decoded = await getUserFromToken(token, process.env.JWT_SECRET!);
       if (decoded) {
-        console.log("MIDDLEWARE: token verified (login/signup)", decoded);
         return NextResponse.redirect(new URL("/dashboard", req.url));
       } else {
-        console.log("MIDDLEWARE: token verification failed (login/signup)");
         return NextResponse.next();
       }
     }
@@ -54,16 +28,13 @@ export async function middleware(req: NextRequest): Promise<NextResponse> {
   }
 
   if (!token) {
-    console.log("MIDDLEWARE: No token, redirecting to /login");
     return NextResponse.redirect(new URL("/login", req.url));
   }
 
-  const decoded = await verifyJWT(token, process.env.JWT_SECRET!);
+  const decoded = await getUserFromToken(token, process.env.JWT_SECRET!);
   if (decoded) {
-    console.log("MIDDLEWARE: token verified (protected path)", decoded);
     return NextResponse.next();
   } else {
-    console.log("MIDDLEWARE: token verification failed (protected path)");
     return NextResponse.redirect(new URL("/login", req.url));
   }
 }

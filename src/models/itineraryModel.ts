@@ -64,9 +64,8 @@ const itinerarySchema = new mongoose.Schema(
   }
 );
 
-const Itinerary: Model<IItinerary> = mongoose.model<IItinerary>(
-  "Itinerary",
-  itinerarySchema
-);
+const Itinerary: Model<IItinerary> =
+  mongoose.models.Itinerary ||
+  mongoose.model<IItinerary>("Itinerary", itinerarySchema);
 
 export default Itinerary;

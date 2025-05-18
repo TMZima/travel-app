@@ -78,16 +78,10 @@ export async function deleteItineraryService(
  */
 export async function getAllItinerariesService(
   userId: string,
-  page = 1,
-  limit = 10
+  page: number,
+  limit: number
 ): Promise<ItineraryData[]> {
   const skip = (page - 1) * limit;
   const itineraries = await getAllItinerariesByUser(userId, skip, limit);
-  if (!itineraries || itineraries.length === 0) {
-    throw new NotFoundError(
-      "No itineraries found",
-      "No itineraries were found for the specified user"
-    );
-  }
-  return itineraries;
+  return itineraries || [];
 }

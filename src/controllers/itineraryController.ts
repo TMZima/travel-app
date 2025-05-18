@@ -7,7 +7,9 @@ import {
   getAllItinerariesService,
 } from "@/services/itineraries/itineraryService";
 import { sendSuccess, sendError } from "@/utils/apiResponse";
+import { getUserFromToken } from "@/utils/auth";
 import { BadRequestError } from "@/utils/customErrors";
+import { dbConnect } from "@/config/db";
 
 /**
  * Create a new itinerary
@@ -99,14 +101,21 @@ export async function getUserItineraries(
   req: NextRequest
 ): Promise<NextResponse> {
   try {
+    await dbConnect();
+
+    const token = req.cookies.get("token")?.value;
+    if (!token) throw new BadRequestError("Missing authentication token");
+
+    const payload = await getUserFromToken(token, process.env.JWT_SECRET!);
+    const userId = payload?.id as string | undefined;
+    if (!userId) throw new BadRequestError("Missing userId in token");
+
     const { searchParams } = new URL(req.url);
-    const userId = searchParams.get("userId");
     const page = parseInt(searchParams.get("page") || "1", 10);
     const limit = parseInt(searchParams.get("limit") || "10", 10);
 
-    if (!userId) throw new BadRequestError("Missing userId");
-
-    const itineraries = await getAllItinerariesService(userId, page, limit);
+    const itineraries =
+      (await getAllItinerariesService(userId, page, limit)) || [];
     return sendSuccess(
       itineraries,
       200,
