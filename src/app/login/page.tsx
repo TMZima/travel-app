@@ -24,7 +24,7 @@ export default function Login() {
       setLoading(true);
       const response = await axios.post("/api/users/login", user);
       toast.success(`Welcome back, ${response.data.data.username}!`);
-      router.push("/"); // Or "/dashboard"
+      router.push("/dashboard");
     } catch (err: any) {
       const message =
         err.response?.data?.message ||
