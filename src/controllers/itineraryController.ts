@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import { NextRequest, NextResponse } from "next/server";
 import {
   createItineraryService,
@@ -7,6 +8,7 @@ import {
   getAllItinerariesService,
 } from "@/services/itineraries/itineraryService";
 import { sendSuccess, sendError } from "@/utils/apiResponse";
+import { validateObjectId } from "@/utils/helperRepository";
 import { getUserFromToken } from "@/utils/auth";
 import { BadRequestError } from "@/utils/customErrors";
 import { dbConnect } from "@/config/db";
@@ -18,11 +20,24 @@ import { dbConnect } from "@/config/db";
  */
 export async function createItinerary(req: NextRequest): Promise<NextResponse> {
   try {
-    const data = await req.json();
-    const itinerary = await createItineraryService(data);
-    return sendSuccess(itinerary, 201, "Itinerary created successfully");
+    await dbConnect();
+
+    const token = req.cookies.get("token")?.value;
+    if (!token) throw new BadRequestError("Authentication required");
+    const user = await getUserFromToken(token, process.env.JWT_SECRET!);
+    if (!user || typeof user.id !== "string")
+      throw new BadRequestError("Invalid user");
+
+    const { title, startDate, endDate } = await req.json();
+
+    const itinerary = await createItineraryService({
+      title,
+      startDate,
+      endDate,
+      createdBy: new mongoose.Types.ObjectId(user.id as string),
+    });
+    return sendSuccess(itinerary, 201, "Itinerary created!");
   } catch (err) {
-    console.error("Error in createItinerary:", err);
     return sendError(err);
   }
 }
@@ -38,8 +53,12 @@ export async function getItinerary(
   context: { params: { id: string } }
 ): Promise<NextResponse> {
   try {
+    await dbConnect();
+
     const { id } = context.params;
     if (!id) throw new BadRequestError("Missing itinerary ID");
+
+    validateObjectId(id, "Invalid itinerary ID");
 
     const itinerary = await getItineraryService(id);
     return sendSuccess(itinerary, 200, "Itinerary fetched successfully");

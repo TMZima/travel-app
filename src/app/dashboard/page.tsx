@@ -40,9 +40,7 @@ export default function Dashboard() {
   const [itineraries, setItineraries] = useState<Itinerary[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
 
-  /**
-   * Fetches the user's itineraries on mount.
-   */
+  // Fetches the user's itineraries on mount.
   useEffect(() => {
     axios
       .get("/api/itinerary/user")
@@ -58,19 +56,6 @@ export default function Dashboard() {
       .finally(() => setLoading(false));
   }, []);
 
-  /**
-   * Handles user logout.
-   */
-  const handleLogout = async (): Promise<void> => {
-    try {
-      await axios.post("/api/users/logout");
-      toast.success("Logged out successfully!");
-      window.location.href = "/login";
-    } catch (err: any) {
-      toast.error("Logout failed. Please try again.");
-    }
-  };
-
   return (
     <main className="flex flex-col items-center justify-center flex-grow px-6 py-12 w-full bg-gray-100">
       <div className="flex justify-between items-center w-full max-w-3xl mb-8">
@@ -81,7 +66,7 @@ export default function Dashboard() {
           href="/itineraries/new"
           className="bg-blue-600 text-white px-6 py-2 rounded-lg shadow hover:bg-blue-700 transition"
         >
-          + New Itinerary
+          Create Itinerary
         </Link>
       </div>
       <div className="w-full max-w-3xl">
@@ -94,12 +79,6 @@ export default function Dashboard() {
             <p className="text-gray-600 text-lg mb-4">
               No itineraries yet. Start by creating one!
             </p>
-            <Link
-              href="/itineraries/new"
-              className="bg-blue-600 text-white px-6 py-2 rounded-lg shadow hover:bg-blue-700 transition"
-            >
-              Create Itinerary
-            </Link>
           </div>
         ) : (
           <ul className="space-y-4">
@@ -131,23 +110,6 @@ export default function Dashboard() {
             ))}
           </ul>
         )}
-      </div>
-      <div className="mt-8">
-        <Link
-          href="/map"
-          className="text-blue-700 underline hover:text-blue-900 transition"
-        >
-          Go to Map
-        </Link>
-      </div>
-      <div className="mt-8">
-        <button
-          type="button"
-          onClick={handleLogout}
-          className="bg-red-600 text-white px-6 py-2 rounded-lg shadow hover:bg-red-700 transition"
-        >
-          Log Out
-        </button>
       </div>
     </main>
   );

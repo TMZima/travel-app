@@ -12,6 +12,7 @@
 
 # testing
 /coverage
+/lcov-report
 
 # next.js
 /.next/

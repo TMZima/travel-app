@@ -14,8 +14,18 @@ export interface IItinerary extends Document {
   updatedAt: Date;
 }
 
-export type ItineraryData = Omit<IItinerary, "createdAt" | "updatedAt" | "_id">;
-export type ItineraryUpdateData = Partial<ItineraryData>;
+export type ItineraryInput = {
+  createdBy: mongoose.Types.ObjectId;
+  title: string;
+  startDate: Date;
+  endDate: Date;
+  accommodations?: mongoose.Types.ObjectId[];
+  pointsOfInterest?: mongoose.Types.ObjectId[];
+  sharedWith?: mongoose.Types.ObjectId[];
+  uploadedEmails?: string;
+};
+
+export type ItineraryUpdateData = Partial<ItineraryInput>;
 
 const itinerarySchema = new mongoose.Schema(
   {

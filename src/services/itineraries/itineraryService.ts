@@ -1,5 +1,8 @@
-import mongoose from "mongoose";
-import { ItineraryData, ItineraryUpdateData } from "@/models/itineraryModel";
+import {
+  IItinerary,
+  ItineraryInput,
+  ItineraryUpdateData,
+} from "@/models/itineraryModel";
 import {
   createItinerary,
   getItineraryById,
@@ -13,13 +16,10 @@ import { BadRequestError, NotFoundError } from "@/utils/customErrors";
  * Create a new itinerary
  */
 export async function createItineraryService(
-  data: ItineraryData
-): Promise<ItineraryData> {
+  data: ItineraryInput
+): Promise<IItinerary> {
   if (!data.title || !data.startDate || !data.endDate || !data.createdBy) {
-    throw new BadRequestError(
-      "Missing required fields",
-      "Please provide all required fields"
-    );
+    throw new BadRequestError("Please provide all required fields");
   }
 
   return await createItinerary(data);
@@ -28,13 +28,10 @@ export async function createItineraryService(
 /**
  * Fetch an itinerary by its ID
  */
-export async function getItineraryService(id: string): Promise<ItineraryData> {
+export async function getItineraryService(id: string): Promise<IItinerary> {
   const itinerary = await getItineraryById(id);
   if (!itinerary) {
-    throw new NotFoundError(
-      "Itinerary not found",
-      "The requested itinerary could not be found"
-    );
+    throw new NotFoundError("The requested itinerary could not be found");
   }
   return itinerary;
 }
@@ -42,11 +39,10 @@ export async function getItineraryService(id: string): Promise<ItineraryData> {
 export async function updateItineraryService(
   id: string,
   data: ItineraryUpdateData
-): Promise<ItineraryData> {
+): Promise<IItinerary> {
   const updatedItinerary = await updateItineraryById(id, data);
   if (!updatedItinerary) {
     throw new NotFoundError(
-      "Itinerary not found",
       "The itinerary you are trying to update does not exist"
     );
   }
@@ -62,7 +58,6 @@ export async function deleteItineraryService(
   const deletedItinerary = await deleteItineraryById(id);
   if (!deletedItinerary) {
     throw new NotFoundError(
-      "Itinerary not found",
       "The itinerary you are trying to delete does not exist"
     );
   }
@@ -80,7 +75,7 @@ export async function getAllItinerariesService(
   userId: string,
   page: number,
   limit: number
-): Promise<ItineraryData[]> {
+): Promise<IItinerary[]> {
   const skip = (page - 1) * limit;
   const itineraries = await getAllItinerariesByUser(userId, skip, limit);
   return itineraries || [];

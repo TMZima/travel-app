@@ -1,9 +1,10 @@
 import mongoose from "mongoose";
 import Itinerary, {
-  ItineraryData,
+  IItinerary,
+  ItineraryInput,
   ItineraryUpdateData,
 } from "@/models/itineraryModel";
-import { NotFoundError } from "@/utils/customErrors";
+import { NotFoundError, BadRequestError } from "@/utils/customErrors";
 import { validateObjectId } from "@/utils/helperRepository";
 
 /**
@@ -12,9 +13,14 @@ import { validateObjectId } from "@/utils/helperRepository";
  * @returns The created itinerary
  */
 export async function createItinerary(
-  data: ItineraryData
-): Promise<ItineraryData> {
-  return await Itinerary.create(data);
+  data: ItineraryInput
+): Promise<IItinerary> {
+  try {
+    const itinerary = await Itinerary.create(data);
+    return itinerary;
+  } catch (err) {
+    throw new BadRequestError("Failed to create itinerary");
+  }
 }
 
 /**
@@ -24,7 +30,7 @@ export async function createItinerary(
  * @throws BadRequestError if the ID is invalid
  * @throws NotFoundError if the itinerary is not found
  */
-export async function getItineraryById(id: string) {
+export async function getItineraryById(id: string): Promise<IItinerary> {
   validateObjectId(id, "Invalid itinerary ID");
   const itinerary = await Itinerary.findById(id)
     .populate("createdBy", "username email")
@@ -50,7 +56,7 @@ export async function getItineraryById(id: string) {
 export async function updateItineraryById(
   id: string,
   data: ItineraryUpdateData
-) {
+): Promise<IItinerary> {
   validateObjectId(id, "Invalid itinerary ID");
   const updatedItinerary = await Itinerary.findByIdAndUpdate(id, data, {
     new: true,
@@ -75,7 +81,7 @@ export async function updateItineraryById(
  * @throws BadRequestError if the ID is invalid
  * @throws NotFoundError if the itinerary is not found
  */
-export async function deleteItineraryById(id: string): Promise<ItineraryData> {
+export async function deleteItineraryById(id: string): Promise<IItinerary> {
   validateObjectId(id, "Invalid itinerary ID");
 
   const deletedItinerary = await Itinerary.findByIdAndDelete(id);
@@ -99,7 +105,7 @@ export async function getAllItinerariesByUser(
   userId: string | mongoose.Types.ObjectId,
   skip = 0,
   limit = 10
-): Promise<ItineraryData[]> {
+): Promise<IItinerary[]> {
   validateObjectId(userId.toString(), "Invalid user ID");
 
   return await Itinerary.find({ createdBy: userId })
