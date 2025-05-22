@@ -1,4 +1,6 @@
 import mongoose, { Model } from "mongoose";
+import "@/models/accommodationModel";
+import "@/models/pointsOfInterestModel";
 
 export interface IItinerary extends Document {
   _id: mongoose.Types.ObjectId;
