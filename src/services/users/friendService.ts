@@ -7,7 +7,7 @@ import {
   ConflictError,
   NotFoundError,
 } from "@/utils/customErrors";
-import { getUserIdFromUrl } from "@/utils/helperService";
+import { getUserIdFromRequest } from "@/utils/auth";
 
 // --- Interfaces ---
 interface FriendRequestBody {
@@ -24,11 +24,9 @@ export async function getFriendsService(
   req: NextRequest
 ): Promise<{ friends: ObjectId[] }> {
   await dbConnect();
-  const userId = getUserIdFromUrl(req);
-
+  const userId = await getUserIdFromRequest(req, process.env.JWT_SECRET!);
   const user = await findUserById(userId);
   if (!user) throw new NotFoundError("User not found");
-
   return { friends: user.friends };
 }
 
@@ -44,7 +42,7 @@ export async function addFriendService(
   req: NextRequest
 ): Promise<{ message: string }> {
   await dbConnect();
-  const userId = getUserIdFromUrl(req);
+  const userId = await getUserIdFromRequest(req, process.env.JWT_SECRET!);
   const { friendId }: FriendRequestBody = await req.json();
 
   if (!friendId) throw new BadRequestError("Friend ID is required");
@@ -78,7 +76,7 @@ export async function removeFriendService(
   req: NextRequest
 ): Promise<{ message: string }> {
   await dbConnect();
-  const userId = getUserIdFromUrl(req);
+  const userId = await getUserIdFromRequest(req, process.env.JWT_SECRET!);
   const { friendId }: FriendRequestBody = await req.json();
 
   if (!friendId) throw new BadRequestError("Friend ID is required");

@@ -15,7 +15,8 @@ import {
   MongooseValidationError,
   NotFoundError,
 } from "@/utils/customErrors";
-import { getJwtSecret, getUserIdFromUrl } from "@/utils/helperService";
+import { getJwtSecret } from "@/utils/helperService";
+import { getUserIdFromRequest } from "@/utils/auth";
 import { IUserDocument } from "@/models/userModel";
 import { validateObjectId } from "@/utils/helperRepository";
 
@@ -99,7 +100,7 @@ export async function registerUserService(
 export async function getUserService(req: NextRequest): Promise<IUserDocument> {
   await dbConnect();
 
-  const userId = getUserIdFromUrl(req);
+  const userId = await getUserIdFromRequest(req, process.env.JWT_SECRET!);
   const user = await findUserById(userId);
 
   if (!user) {
@@ -140,7 +141,7 @@ export async function deleteUserService(
 ): Promise<{ message: string }> {
   await dbConnect();
 
-  const userId = getUserIdFromUrl(req);
+  const userId = await getUserIdFromRequest(req, process.env.JWT_SECRET!);
   if (!userId) {
     throw new BadRequestError("User ID is required");
   }

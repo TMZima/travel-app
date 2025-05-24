@@ -1,13 +1,20 @@
-import { getUserIdFromUrl } from "../../../utils/helperService";
+import { getUserFromToken } from "../../../utils/auth";
 import { BadRequestError } from "@/utils/customErrors";
 
-describe("getUserIdFromUrl", () => {
-  it("should return the user ID from a valid URL", () => {
+describe("getUserFromToken", () => {
+  it("should return the user ID from a valid token", () => {
     const req = {
-      nextUrl: { pathname: "/api/users/123" },
+      cookies: {
+        get: (name: string) => {
+          if (name === "token") {
+            return { value: "valid-token" };
+          }
+          return null;
+        },
+      },
     } as any;
 
-    const userId = getUserIdFromUrl(req);
+    const userId = getUserFromToken(req, "valid-token");
 
     expect(userId).toBe("123");
   });
@@ -17,8 +24,12 @@ describe("getUserIdFromUrl", () => {
       nextUrl: { pathname: "/api/users/" },
     } as any;
 
-    expect(() => getUserIdFromUrl(req)).toThrow(BadRequestError);
-    expect(() => getUserIdFromUrl(req)).toThrow("User ID is required");
+    expect(() => getUserFromToken(req, "invalid-token")).toThrow(
+      BadRequestError
+    );
+    expect(() => getUserFromToken(req, "invalid-token")).toThrow(
+      "User ID is required"
+    );
   });
 
   it("should throw BadRequestError if the URL is malformed", () => {
@@ -26,7 +37,11 @@ describe("getUserIdFromUrl", () => {
       nextUrl: { pathname: "/api/users" }, // No trailing slash or user ID
     } as any;
 
-    expect(() => getUserIdFromUrl(req)).toThrow(BadRequestError);
-    expect(() => getUserIdFromUrl(req)).toThrow("User ID is required");
+    expect(() => getUserFromToken(req, "invalid-token")).toThrow(
+      BadRequestError
+    );
+    expect(() => getUserFromToken(req, "invalid-token")).toThrow(
+      "User ID is required"
+    );
   });
 });
