@@ -8,6 +8,6 @@ import { createAccommodation } from "@/controllers/accommodationController";
  * @param {NextRequest} req - The incoming HTTP request object.
  * @returns {Promise<Response>} - The response returned by the controller.
  */
-export default async function POST(req: NextRequest): Promise<Response> {
+export const POST = async (req: NextRequest): Promise<Response> => {
   return await createAccommodation(req);
-}
+};

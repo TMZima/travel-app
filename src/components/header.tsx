@@ -18,7 +18,7 @@ export default function Header() {
    */
   const handleLogout = async (): Promise<void> => {
     try {
-      await axios.post("/api/users/logout");
+      await axios.post("/api/user/logout");
       toast.success("Logged out successfully!");
       router.push("/login");
     } catch (err: any) {

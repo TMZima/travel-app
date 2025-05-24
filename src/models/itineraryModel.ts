@@ -1,4 +1,5 @@
 import mongoose, { Model } from "mongoose";
+import "@/models/userModel";
 import "@/models/accommodationModel";
 import "@/models/pointsOfInterestModel";
 

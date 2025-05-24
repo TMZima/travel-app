@@ -8,6 +8,6 @@ import { createItinerary } from "@/controllers/itineraryController";
  * @param {NextRequest} req - The incoming HTTP request object.
  * @returns {Promise<Response>} - The response returned by the controller.
  */
-export async function POST(req: NextRequest): Promise<Response> {
-  return await createItinerary(req);
-}
+export const POST = async (req: NextRequest): Promise<Response> => {
+  return createItinerary(req);
+};

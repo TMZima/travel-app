@@ -45,7 +45,7 @@ export default function Dashboard() {
     axios
       .get("/api/itinerary/user")
       .then((res) => setItineraries(res.data.data))
-      .catch((err) => {
+      .catch((err: any) => {
         const message =
           err?.response?.data?.message ||
           err?.response?.data?.error ||
@@ -55,6 +55,27 @@ export default function Dashboard() {
       })
       .finally(() => setLoading(false));
   }, []);
+
+  // Delete handler with confirmation
+  const handleDelete = async (id: string) => {
+    const confirmed = confirm(
+      "Are you sure you want to delete this itinerary?"
+    );
+    if (!confirmed) return;
+    try {
+      await axios.delete(`/api/itinerary/${id}`);
+      setItineraries((prev) => prev.filter((itin) => itin._id !== id));
+      toast.success("Itinerary deleted successfully");
+    } catch (err: any) {
+      const message =
+        err?.response?.data?.message ||
+        err?.response?.data?.error ||
+        err?.message ||
+        "Failed to delete itinerary";
+      toast.error(message);
+      console.error("Error deleting itinerary:", err);
+    }
+  };
 
   return (
     <main className="flex flex-col items-center justify-center flex-grow px-6 py-12 w-full bg-gray-100">
@@ -100,12 +121,20 @@ export default function Dashboard() {
                     {itin.pointsOfInterest.length} points of interest
                   </p>
                 </div>
-                <Link
-                  href={`/itineraries/${itin._id}`}
-                  className="text-blue-600 underline hover:text-blue-800 transition"
-                >
-                  View/Edit
-                </Link>
+                <div className="flex gap-4">
+                  <Link
+                    href={`/itineraries/${itin._id}`}
+                    className="text-blue-600 underline hover:text-blue-800 transition"
+                  >
+                    View/Edit
+                  </Link>
+                  <button
+                    onClick={() => handleDelete(itin._id)}
+                    className="text-red-600 hover:text-red-800 transition underline cursor-pointer"
+                  >
+                    Delete
+                  </button>
+                </div>
               </li>
             ))}
           </ul>

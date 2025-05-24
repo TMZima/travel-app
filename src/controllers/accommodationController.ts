@@ -9,6 +9,7 @@ import {
 } from "@/services/accommodations/accommodationService";
 import { sendSuccess, sendError } from "@/utils/apiResponse";
 import { BadRequestError } from "@/utils/customErrors";
+import { getUserFromToken } from "@/utils/auth";
 
 /**
  * Create a new accommodation
@@ -19,8 +20,19 @@ export async function createAccommodation(
   req: NextRequest
 ): Promise<NextResponse> {
   try {
+    const token = req.cookies.get("token")?.value;
+    if (!token) return sendError(new BadRequestError("Unauthorized"));
+
+    const user = await getUserFromToken(token, process.env.JWT_SECRET!);
+    if (!user) return sendError(new BadRequestError("Unauthorized"));
+
     const data = await req.json();
-    const accommodation = await createAccommodationService(data);
+
+    const accommodation = await createAccommodationService({
+      ...data,
+      createdBy: user.id || user._id,
+    });
+
     return sendSuccess(
       accommodation,
       201,
@@ -43,7 +55,7 @@ export async function getAccommodation(
   context: { params: { id: string } }
 ): Promise<NextResponse> {
   try {
-    const { id } = context.params;
+    const { id } = await context.params;
     if (!id) throw new BadRequestError("Missing accommodation ID");
 
     const accommodation = await getAccommodationService(id);
@@ -69,7 +81,7 @@ export async function updateAccommodation(
   context: { params: { id: string } }
 ): Promise<NextResponse> {
   try {
-    const { id } = context.params;
+    const { id } = await context.params;
     const data = await req.json();
     const updatedAccommodation = await updateAccommodationService(id, data);
     return sendSuccess(
@@ -94,7 +106,7 @@ export async function deleteAccommodation(
   context: { params: { id: string } }
 ): Promise<NextResponse> {
   try {
-    const { id } = context.params;
+    const { id } = await context.params;
     if (!id) throw new BadRequestError("Missing accommodation ID");
 
     const response = await deleteAccommodationService(id);

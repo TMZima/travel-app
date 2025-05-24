@@ -23,7 +23,6 @@ const pointOfInterestSchema = new Schema<IPointOfInterest>(
   { timestamps: { createdAt: "createdAt", updatedAt: "editedAt" } }
 );
 
-export const PointOfInterest = mongoose.model<IPointOfInterest>(
-  "PointOfInterest",
-  pointOfInterestSchema
-);
+export const PointOfInterest =
+  mongoose.models.PointOfInterest ||
+  mongoose.model<IPointOfInterest>("PointOfInterest", pointOfInterestSchema);

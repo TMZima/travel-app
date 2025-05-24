@@ -45,7 +45,7 @@ export default function Signup() {
 
     try {
       setLoading(true);
-      const response = await axios.post("/api/users/signup", user);
+      const response = await axios.post("/api//signup", user);
       console.log("Signup success", response.data);
       toast.success(
         `Welcome aboard, ${user.username}! Your journey begins now!`

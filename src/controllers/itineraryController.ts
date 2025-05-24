@@ -55,7 +55,7 @@ export async function getItinerary(
   try {
     await dbConnect();
 
-    const { id } = context.params;
+    const { id } = await context.params;
     if (!id) throw new BadRequestError("Missing itinerary ID");
 
     validateObjectId(id, "Invalid itinerary ID");
@@ -79,7 +79,7 @@ export async function updateItinerary(
   context: { params: { id: string } }
 ): Promise<NextResponse> {
   try {
-    const { id } = context.params;
+    const { id } = await context.params;
     const data = await req.json();
     const updatedItinerary = await updateItineraryService(id, data);
     return sendSuccess(updatedItinerary, 200, "Itinerary updated successfully");
@@ -100,7 +100,7 @@ export async function deleteItinerary(
   context: { params: { id: string } }
 ): Promise<NextResponse> {
   try {
-    const { id } = context.params;
+    const { id } = await context.params;
     if (!id) throw new BadRequestError("Missing itinerary ID");
 
     await deleteItineraryService(id);

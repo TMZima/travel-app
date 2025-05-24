@@ -54,9 +54,8 @@ accommodationSchema.virtual("duration").get(function (this: IAccommodation) {
   return null;
 });
 
-const Accommodation = mongoose.model<IAccommodation>(
-  "Accommodation",
-  accommodationSchema
-);
+const Accommodation =
+  mongoose.models.Accommodation ||
+  mongoose.model<IAccommodation>("Accommodation", accommodationSchema);
 
 export default Accommodation;

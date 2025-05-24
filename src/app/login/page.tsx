@@ -42,7 +42,7 @@ export default function Login() {
     }
     try {
       setLoading(true);
-      const response = await axios.post("/api/users/login", user);
+      const response = await axios.post("/api/user/login", user);
       toast.success(`Welcome back, ${response.data.data.username}!`);
       router.push("/dashboard");
     } catch (err: any) {

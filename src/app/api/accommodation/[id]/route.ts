@@ -13,12 +13,12 @@ import {
  * @param {{ params: { id: string } }} context - The request context containing route parameters.
  * @returns {Promise<Response>} - The response returned by the controller.
  */
-export async function GET(
+export const GET = (
   req: NextRequest,
   context: { params: { id: string } }
-): Promise<Response> {
-  return await getAccommodation(req, context);
-}
+): Promise<Response> => {
+  return getAccommodation(req, context);
+};
 
 /**
  * Handles the PUT request to update an accommodation by ID.
@@ -28,12 +28,12 @@ export async function GET(
  * @param {{ params: { id: string } }} context - The request context containing route parameters.
  * @returns {Promise<Response>} - The response returned by the controller.
  */
-export async function PUT(
+export const PUT = (
   req: NextRequest,
   context: { params: { id: string } }
-): Promise<Response> {
-  return await updateAccommodation(req, context);
-}
+): Promise<Response> => {
+  return updateAccommodation(req, context);
+};
 
 /**
  * Handles the DELETE request to remove an accommodation by ID.
@@ -43,9 +43,9 @@ export async function PUT(
  * @param {{ params: { id: string } }} context - The request context containing route parameters.
  * @returns {Promise<Response>} - The response returned by the controller.
  */
-export async function DELETE(
+export const DELETE = (
   req: NextRequest,
   context: { params: { id: string } }
-): Promise<Response> {
-  return await deleteAccommodation(req, context);
-}
+): Promise<Response> => {
+  return deleteAccommodation(req, context);
+};

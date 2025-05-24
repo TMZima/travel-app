@@ -11,12 +11,12 @@ import {
  * @param {{ params: { id: string } }} context - The request context containing route parameters.
  * @returns {Promise<Response>} - The response returned by the controller.
  */
-export async function GET(
+export const GET = (
   req: NextRequest,
   context: { params: { id: string } }
-): Promise<Response> {
-  return await getItinerary(req, context);
-}
+): Promise<Response> => {
+  return getItinerary(req, context);
+};
 
 /**
  * Handles the PUT request to update an itinerary by ID.
@@ -26,12 +26,12 @@ export async function GET(
  * @param {{ params: { id: string } }} context - The request context containing route parameters.
  * @returns {Promise<Response>} - The response returned by the controller.
  */
-export async function PUT(
+export const PUT = (
   req: NextRequest,
   context: { params: { id: string } }
-): Promise<Response> {
-  return await updateItinerary(req, context);
-}
+): Promise<Response> => {
+  return updateItinerary(req, context);
+};
 
 /**
  * Handles the DELETE request to remove an itinerary by ID.
@@ -41,9 +41,9 @@ export async function PUT(
  * @param {{ params: { id: string } }} context - The request context containing route parameters.
  * @returns {Promise<Response>} - The response returned by the controller.
  */
-export async function DELETE(
+export const DELETE = (
   req: NextRequest,
   context: { params: { id: string } }
-): Promise<Response> {
-  return await deleteItinerary(req, context);
-}
+): Promise<Response> => {
+  return deleteItinerary(req, context);
+};

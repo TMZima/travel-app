@@ -8,6 +8,6 @@ import { getUserItineraries } from "@/controllers/itineraryController";
  * @param {NextRequest} req - The incoming HTTP request object.
  * @returns {Promise<Response>} - The response returned by the controller.
  */
-export async function GET(req: NextRequest): Promise<Response> {
-  return await getUserItineraries(req);
-}
+export const GET = async (req: NextRequest): Promise<Response> => {
+  return getUserItineraries(req);
+};

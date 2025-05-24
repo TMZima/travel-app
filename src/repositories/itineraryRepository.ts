@@ -17,7 +17,17 @@ export async function createItinerary(
 ): Promise<IItinerary> {
   try {
     const itinerary = await Itinerary.create(data);
-    return itinerary;
+    const createdItinerary = await Itinerary.findById(itinerary._id)
+      .populate("createdBy", "username email")
+      .populate("accommodations")
+      .populate("pointsOfInterest")
+      .exec();
+
+    if (!createdItinerary) {
+      throw new NotFoundError("Created itinerary not found");
+    }
+
+    return createdItinerary;
   } catch (err) {
     throw new BadRequestError("Failed to create itinerary");
   }
@@ -112,6 +122,7 @@ export async function getAllItinerariesByUser(
     .sort({ createdAt: -1 })
     .skip(skip)
     .limit(limit)
+    .populate("createdBy", "username email")
     .populate("accommodations")
     .populate("pointsOfInterest");
 }

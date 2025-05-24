@@ -5,9 +5,9 @@ import { BadRequestError } from "@/utils/customErrors";
 /**
  * API Route: Logs out the user by clearing the auth token cookie.
  * @route POST /api/users/logout
- * @returns {NextResponse} JSON response indicating logout status.
+ * @returns {NextResponse} - A response indicating the logout status.
  */
-export async function POST() {
+export const POST = async (): Promise<NextResponse> => {
   try {
     // Clear the 'token' cookie by setting it to empty and expired
     const response = NextResponse.json({ message: "Logged out successfully" });
@@ -24,4 +24,4 @@ export async function POST() {
       new BadRequestError("Logout failed", "Unable to log out user")
     );
   }
-}
+};

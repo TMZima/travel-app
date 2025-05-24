@@ -8,6 +8,6 @@ import { getAccommodationsByItinerary } from "@/controllers/accommodationControl
  * @param {NextRequest} req - The incoming HTTP request object.
  * @returns {Promise<Response>} - The response returned by the controller.
  */
-export default async function GET(req: NextRequest): Promise<Response> {
+export const GET = async (req: NextRequest): Promise<Response> => {
   return await getAccommodationsByItinerary(req);
-}
+};

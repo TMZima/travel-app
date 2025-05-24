@@ -12,9 +12,9 @@ import {
  * @param {NextRequest} req - The incoming HTTP request object.
  * @returns {Promise<Response>} - The response returned by the controller.
  */
-export async function GET(req: NextRequest): Promise<Response> {
-  return await getFriends(req);
-}
+export const GET = async (req: NextRequest): Promise<Response> => {
+  return getFriends(req);
+};
 
 /**
  * Handles the POST request to add a friend.
@@ -23,9 +23,9 @@ export async function GET(req: NextRequest): Promise<Response> {
  * @param {NextRequest} req - The incoming HTTP request object.
  * @returns {Promise<Response>} - The response returned by the controller.
  */
-export async function POST(req: NextRequest): Promise<Response> {
-  return await addFriend(req);
-}
+export const POST = async (req: NextRequest): Promise<Response> => {
+  return addFriend(req);
+};
 
 /**
  * Handles the DELETE request to remove a friend.
@@ -34,6 +34,6 @@ export async function POST(req: NextRequest): Promise<Response> {
  * @param {NextRequest} req - The incoming HTTP request object.
  * @returns {Promise<Response>} - The response returned by the controller.
  */
-export async function DELETE(req: NextRequest): Promise<Response> {
-  return await removeFriend(req);
-}
+export const DELETE = async (req: NextRequest): Promise<Response> => {
+  return removeFriend(req);
+};
