@@ -15,6 +15,17 @@ export async function findUserByEmail(
 }
 
 /**
+ * Find a user by username
+ * @param username - The username of the user
+ * @returns The user object or null if not found
+ */
+export async function findUserByUsername(
+  username: string
+): Promise<IUserDocument | null> {
+  return await User.findOne({ username });
+}
+
+/**
  * Create a new user
  * @param data - The user data (username, email, password)
  * @returns The created user object

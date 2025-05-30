@@ -5,6 +5,7 @@ import { dbConnect } from "@/config/db";
 import {
   createUser,
   findUserByEmail,
+  findUserByUsername,
   findUserById,
   updateUserById,
   deleteUserById,
@@ -64,6 +65,14 @@ export async function registerUserService(
   const userExists = await findUserByEmail(email);
   if (userExists) {
     throw new ConflictError("Email already in use");
+  }
+
+  const usernameExists = await findUserByUsername(username);
+  if (usernameExists) {
+    throw new ConflictError(
+      "Username already in use",
+      "This username is already in use"
+    );
   }
 
   const secret = getJwtSecret();
