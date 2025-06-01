@@ -1,12 +1,11 @@
-/** @type {import('ts-jest').JestConfigWithTsJest} **/
 module.exports = {
-  testEnvironment: "node",
+  testEnvironment: "jsdom", // Use jsdom for React/Next.js
   transform: {
-    "^.+\\.tsx?$": ["ts-jest", {}],
-    "^.+\\.(js|jsx)$": "babel-jest",
+    "^.+\\.(js|jsx|ts|tsx)$": "babel-jest",
   },
   moduleNameMapper: {
     "^@/(.*)$": "<rootDir>/src/$1",
+    "\\.(css|less|scss|sass)$": "identity-obj-proxy", // Optional: for CSS modules
   },
   testPathIgnorePatterns: ["/node_modules/", "/.next/"],
   collectCoverage: true,
