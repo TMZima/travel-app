@@ -48,9 +48,6 @@ export default function Header() {
           <Link href="/dashboard" className="hover:underline">
             Dashboard
           </Link>
-          <Link href="/map" className="hover:underline">
-            Map
-          </Link>
           <button
             type="button"
             onClick={handleLogout}

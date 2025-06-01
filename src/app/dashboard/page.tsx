@@ -2,45 +2,33 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import axios from "axios";
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+dayjs.extend(utc);
 import toast from "react-hot-toast";
 
-/**
- * Represents an accommodation in an itinerary.
- */
-interface Accommodation {
-  _id: string;
-  name?: string;
+interface Activity {
+  time: string;
+  description: string;
 }
 
-/**
- * Represents a point of interest in an itinerary.
- */
-interface PointOfInterest {
-  _id: string;
-  name?: string;
+interface DayPlan {
+  date: string;
+  activities: Activity[];
 }
 
-/**
- * Represents a user's itinerary.
- */
 interface Itinerary {
   _id: string;
-  title: string;
+  destination: string;
   startDate: string;
   endDate: string;
-  accommodations: Accommodation[];
-  pointsOfInterest: PointOfInterest[];
+  days: DayPlan[];
 }
 
-/**
- * Dashboard page component for displaying user itineraries.
- * @returns The dashboard page.
- */
 export default function Dashboard() {
   const [itineraries, setItineraries] = useState<Itinerary[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
 
-  // Fetches the user's itineraries on mount.
   useEffect(() => {
     axios
       .get("/api/itinerary/user")
@@ -56,7 +44,6 @@ export default function Dashboard() {
       .finally(() => setLoading(false));
   }, []);
 
-  // Delete handler with confirmation
   const handleDelete = async (id: string) => {
     const confirmed = confirm(
       "Are you sure you want to delete this itinerary?"
@@ -110,15 +97,15 @@ export default function Dashboard() {
               >
                 <div>
                   <h3 className="text-xl font-semibold text-gray-800">
-                    {itin.title}
+                    {itin.destination}
                   </h3>
                   <p className="text-gray-600">
-                    {new Date(itin.startDate).toLocaleDateString()} -{" "}
-                    {new Date(itin.endDate).toLocaleDateString()}
+                    {dayjs.utc(itin.startDate).format("MMMM D, YYYY")} -{" "}
+                    {dayjs.utc(itin.endDate).format("MMMM D, YYYY")}
                   </p>
                   <p className="text-gray-500 text-sm">
-                    {itin.accommodations.length} accommodations,{" "}
-                    {itin.pointsOfInterest.length} points of interest
+                    {itin.days.length} day{itin.days.length !== 1 ? "s" : ""} of
+                    scheduled activities
                   </p>
                 </div>
                 <div className="flex gap-4">

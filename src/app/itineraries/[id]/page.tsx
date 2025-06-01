@@ -1,55 +1,75 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, FormEvent } from "react";
 import { useParams, useRouter } from "next/navigation";
-import axios from "axios";
-import toast from "react-hot-toast";
 import Link from "next/link";
+import axios from "axios";
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+dayjs.extend(utc);
+import toast from "react-hot-toast";
 
-interface Accommodation {
-  _id: string;
-  name: string;
-  address: string;
-  type: string;
-  confirmationNumber: string;
-  checkInDate: string;
-  checkOutDate: string;
-  location: string;
+/** Represents a single activity in a day's plan. */
+interface Activity {
+  time: string;
+  description: string;
 }
 
-interface PointOfInterest {
+/** Represents a single day in the itinerary. */
+interface DayPlan {
+  date: string;
+  activities: Activity[];
+}
+
+/** Represents the itinerary object. */
+interface Itinerary {
   _id: string;
-  name: string;
+  destination: string;
+  startDate: string;
+  endDate: string;
+  days: DayPlan[];
 }
 
 export default function ItineraryDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
-  const [itinerary, setItinerary] = useState<any>(null);
+  const [itinerary, setItinerary] = useState<Itinerary | null>(null);
   const [loading, setLoading] = useState(true);
-  const [form, setForm] = useState({ title: "", startDate: "", endDate: "" });
-  const [addingAcc, setAddingAcc] = useState(false);
 
-  const [newAcc, setNewAcc] = useState({
-    name: "",
-    address: "",
-    type: "Hotel",
-    confirmationNumber: "",
-    checkInDate: "",
-    checkOutDate: "",
-    location: "",
+  // For editing/adding activities
+  const [editDayIdx, setEditDayIdx] = useState<number | null>(null);
+  const [newActivity, setNewActivity] = useState<Activity>({
+    time: "",
+    description: "",
   });
 
-  // Fetch itinerary and populate accommodations/POIs
+  // For editing an existing activity
+  const [editActivity, setEditActivity] = useState<{
+    dayIdx: number;
+    actIdx: number;
+  } | null>(null);
+  const [editActivityData, setEditActivityData] = useState<Activity>({
+    time: "",
+    description: "",
+  });
+
+  // For editing itinerary details
+  const [editDetails, setEditDetails] = useState(false);
+  const [editDestination, setEditDestination] = useState("");
+  const [editStartDate, setEditStartDate] = useState("");
+  const [editEndDate, setEditEndDate] = useState("");
+
+  // For adding a new day
+  const [newDayDate, setNewDayDate] = useState("");
+
+  // Fetch itinerary
   const fetchItinerary = async () => {
     setLoading(true);
     try {
       const res = await axios.get(`/api/itinerary/${id}`);
       setItinerary(res.data.data);
-      setForm({
-        title: res.data.data.title,
-        startDate: res.data.data.startDate.slice(0, 10),
-        endDate: res.data.data.endDate.slice(0, 10),
-      });
+      setEditDestination(res.data.data.destination);
+      setEditStartDate(res.data.data.startDate.slice(0, 10));
+      setEditEndDate(res.data.data.endDate.slice(0, 10));
     } catch {
       toast.error("Failed to load itinerary");
     } finally {
@@ -62,277 +82,401 @@ export default function ItineraryDetailPage() {
     // eslint-disable-next-line
   }, [id]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
-  };
-
-  const handleSave = async () => {
-    try {
-      await axios.put(`/api/itinerary/${id}`, form);
-      toast.success("Itinerary updated!");
-      fetchItinerary();
-    } catch (err: any) {
-      toast.error(
-        err?.response?.data?.message ||
-          err?.response?.data?.error ||
-          err?.message ||
-          "Failed to update itinerary"
-      );
-    }
-  };
-
-  const handleAddAccommodation = async () => {
-    // Validate required fields
-    if (
-      !newAcc.name ||
-      !newAcc.address ||
-      !newAcc.type ||
-      !newAcc.checkInDate ||
-      !newAcc.checkOutDate ||
-      !newAcc.location
-    ) {
-      toast.error("Please fill out all required accommodation fields.");
+  // Add activity to a day
+  const handleAddActivity = async (dayIdx: number) => {
+    if (!newActivity.time || !newActivity.description) {
+      toast.error("Please fill out both time and description.");
       return;
     }
-    setAddingAcc(true);
+    if (!itinerary) return;
+    // Sort days before updating to keep order consistent
+    const sortedDays = [...itinerary.days].sort(
+      (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+    );
+    sortedDays[dayIdx].activities.push({ ...newActivity });
+    // Sort activities by time before saving
+    sortedDays[dayIdx].activities = [...sortedDays[dayIdx].activities].sort(
+      (a, b) => a.time.localeCompare(b.time)
+    );
     try {
-      // 1. Create accommodation (backend will set createdBy from token)
-      const accRes = await axios.post("/api/accommodation", {
-        ...newAcc,
-        confirmationNumber: newAcc.confirmationNumber || "",
-        belongsTo: id,
-      });
-      const acc = accRes.data.data;
-      // 2. Update itinerary to include new accommodation
-      await axios.put(`/api/itinerary/${id}`, {
-        accommodations: [
-          ...(itinerary.accommodations || []).map((a: Accommodation) => a._id),
-          acc._id,
-        ],
-      });
-      toast.success("Accommodation added!");
-      setNewAcc({
-        name: "",
-        address: "",
-        type: "Hotel",
-        confirmationNumber: "",
-        checkInDate: "",
-        checkOutDate: "",
-        location: "",
-      });
+      await axios.put(`/api/itinerary/${id}`, { days: sortedDays });
+      setNewActivity({ time: "", description: "" });
+      setEditDayIdx(null);
       fetchItinerary();
-    } catch (err: any) {
-      toast.error("Failed to add accommodation");
-    } finally {
-      setAddingAcc(false);
+      toast.success("Activity added!");
+    } catch {
+      toast.error("Failed to add activity");
     }
   };
 
-  const handleRemoveAccommodation = async (accId: string) => {
+  // Edit an existing activity
+  const handleUpdateActivity = async (dayIdx: number, actIdx: number) => {
+    if (!editActivityData.time || !editActivityData.description || !itinerary)
+      return;
+    const sortedDays = [...itinerary.days].sort(
+      (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+    );
+    sortedDays[dayIdx].activities[actIdx] = { ...editActivityData };
+    // Sort activities by time
+    sortedDays[dayIdx].activities = [...sortedDays[dayIdx].activities].sort(
+      (a, b) => a.time.localeCompare(b.time)
+    );
     try {
-      await axios.put(`/api/itinerary/${id}`, {
-        accommodations: (itinerary.accommodations || [])
-          .filter((a: Accommodation) => a._id !== accId)
-          .map((a: Accommodation) => a._id),
-      });
-      toast.success("Accommodation removed!");
+      await axios.put(`/api/itinerary/${id}`, { days: sortedDays });
+      setEditActivity(null);
+      fetchItinerary();
+      toast.success("Activity updated!");
+    } catch {
+      toast.error("Failed to update activity");
+    }
+  };
+
+  // Delete an activity
+  const handleDeleteActivity = async (dayIdx: number, actIdx: number) => {
+    if (!itinerary) return;
+    const sortedDays = [...itinerary.days].sort(
+      (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+    );
+    sortedDays[dayIdx].activities.splice(actIdx, 1);
+    try {
+      await axios.put(`/api/itinerary/${id}`, { days: sortedDays });
+      fetchItinerary();
+      toast.success("Activity deleted!");
+    } catch {
+      toast.error("Failed to delete activity");
+    }
+  };
+
+  // Delete a day
+  const handleDeleteDay = async (dayIdx: number) => {
+    if (!itinerary) return;
+    const updatedDays = itinerary.days.filter((_, idx) => idx !== dayIdx);
+    try {
+      await axios.put(`/api/itinerary/${itinerary._id}`, { days: updatedDays });
+      toast.success("Day deleted!");
+      setEditDayIdx(null);
       fetchItinerary();
     } catch {
-      toast.error("Failed to remove accommodation");
+      toast.error("Failed to delete day");
+    }
+  };
+
+  // Add a new day
+  const handleAddDay = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!itinerary) return;
+    if (!newDayDate) {
+      toast.error("Please enter a date for the new day.");
+      return;
+    }
+    if (
+      newDayDate < itinerary.startDate.slice(0, 10) ||
+      newDayDate > itinerary.endDate.slice(0, 10)
+    ) {
+      toast.error("Day must be within the itinerary's start and end dates.");
+      return;
+    }
+    if (itinerary.days.some((d) => d.date === newDayDate)) {
+      toast.error("That day already exists.");
+      return;
+    }
+    const updatedDays = [
+      ...itinerary.days,
+      { date: newDayDate, activities: [] },
+    ].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    try {
+      await axios.put(`/api/itinerary/${id}`, { days: updatedDays });
+      setNewDayDate("");
+      fetchItinerary();
+      toast.success("Day added!");
+    } catch {
+      toast.error("Failed to add day");
+    }
+  };
+
+  // Update itinerary details
+  const handleUpdateDetails = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!itinerary) return;
+    try {
+      await axios.put(`/api/itinerary/${id}`, {
+        destination: editDestination,
+        startDate: editStartDate,
+        endDate: editEndDate,
+        days: itinerary.days,
+      });
+      setEditDetails(false);
+      fetchItinerary();
+      toast.success("Itinerary updated!");
+    } catch {
+      toast.error("Failed to update itinerary");
     }
   };
 
   if (loading)
     return (
       <main className="flex flex-col items-center justify-center flex-grow px-6 py-12 w-full bg-gray-100">
-        <div className="p-8">Loading...</div>
+        <div className="p-8 text-gray-900">Loading...</div>
       </main>
     );
-  if (!itinerary) return <div className="p-8">Itinerary not found</div>;
+  if (!itinerary)
+    return <div className="p-8 text-gray-900">Itinerary not found</div>;
+
+  // Always sort days by date before rendering
+  const sortedDays = [...itinerary.days].sort(
+    (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+  );
 
   return (
-    <main className="flex flex-col items-center justify-center flex-grow px-6 py-12 w-full bg-gray-100">
-      <div className="max-w-xl w-full bg-white rounded shadow p-8">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-semibold text-gray-800">
-            Edit Itinerary
+    <main className="flex flex-col items-center justify-center flex-grow px-6 py-12 w-full bg-gray-100 text-gray-900">
+      <div className="max-w-xl w-full bg-white rounded shadow p-8 text-gray-900">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-2xl font-semibold text-gray-900">
+            {editDetails ? "Edit Itinerary" : itinerary.destination}
           </h2>
           <Link
             href="/dashboard"
-            className="text-blue-600 underline hover:text-blue-800"
+            className="text-blue-600 underline hover:text-blue-800 transition"
           >
-            Back to Dashboard
+            &larr; Back to Dashboard
           </Link>
         </div>
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            handleSave();
-          }}
-          className="space-y-4"
-        >
-          <label className="block">
-            <span className="text-gray-700">Title</span>
+        {editDetails ? (
+          <form
+            onSubmit={handleUpdateDetails}
+            className="mb-6 flex flex-col gap-2"
+          >
             <input
-              name="title"
-              value={form.title}
-              onChange={handleChange}
-              className="mt-1 block w-full border rounded px-3 py-2 bg-white text-gray-900"
+              type="text"
+              value={editDestination}
+              onChange={(e) => setEditDestination(e.target.value)}
+              className="border rounded px-3 py-2 bg-white text-gray-900 text-base"
               required
             />
-          </label>
-          <label className="block">
-            <span className="text-gray-700">Start Date</span>
-            <input
-              type="date"
-              name="startDate"
-              value={form.startDate}
-              onChange={handleChange}
-              className="mt-1 block w-full border rounded px-3 py-2 bg-white text-gray-900"
-              required
-            />
-          </label>
-          <label className="block">
-            <span className="text-gray-700">End Date</span>
-            <input
-              type="date"
-              name="endDate"
-              value={form.endDate}
-              onChange={handleChange}
-              className="mt-1 block w-full border rounded px-3 py-2 bg-white text-gray-900"
-              required
-            />
-          </label>
+            <div className="flex gap-2">
+              <input
+                type="date"
+                value={editStartDate}
+                onChange={(e) => setEditStartDate(e.target.value)}
+                className="border rounded px-3 py-2 bg-white text-gray-900 text-base"
+                required
+              />
+              <input
+                type="date"
+                value={editEndDate}
+                onChange={(e) => setEditEndDate(e.target.value)}
+                min={itinerary?.startDate.slice(0, 10)}
+                max={itinerary?.endDate.slice(0, 10)}
+                className="border rounded px-3 py-2 bg-white text-gray-900 text-base"
+                required
+              />
+            </div>
+            <div className="flex gap-2 mt-2">
+              <button
+                type="submit"
+                className="bg-green-600 text-white px-3 py-1 rounded"
+              >
+                Save
+              </button>
+              <button
+                type="button"
+                className="text-gray-500 underline"
+                onClick={() => setEditDetails(false)}
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+        ) : (
+          <>
+            <p className="mb-4 text-gray-900">
+              <span className="font-medium text-gray-900">Dates:</span>{" "}
+              {dayjs.utc(itinerary.startDate).format("MMMM D, YYYY")} to{" "}
+              {dayjs.utc(itinerary.endDate).format("MMMM D, YYYY")}
+            </p>
+            <button
+              className="mb-6 text-blue-600 underline hover:text-blue-800 transition cursor-pointer"
+              onClick={() => setEditDetails(true)}
+            >
+              Edit Itinerary Details
+            </button>
+          </>
+        )}
+
+        {/* Add Day */}
+        <form onSubmit={handleAddDay} className="flex gap-2 items-center mb-6">
+          <input
+            type="date"
+            value={newDayDate}
+            onChange={(e) => setNewDayDate(e.target.value)}
+            className="border rounded px-3 py-2 bg-white text-gray-900 text-base"
+            min={itinerary?.startDate.slice(0, 10)}
+            max={itinerary?.endDate.slice(0, 10)}
+          />
           <button
             type="submit"
-            className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700"
+            className="bg-blue-600 text-white px-3 py-2 rounded hover:bg-blue-700 transition cursor-pointer"
           >
-            Save Changes
+            Add Day
           </button>
         </form>
-        {/* Accommodations Section */}
-        <div className="mt-6 text-gray-700 text-base">
-          <h4 className="font-semibold mb-2">Accommodations</h4>
-          <ul className="list-disc list-inside mb-4">
-            {(itinerary.accommodations || []).map((a: Accommodation) => (
-              <li
-                key={a._id}
-                className="flex flex-col sm:flex-row sm:items-center gap-2 mb-2"
-              >
-                <span className="font-medium">{a.name}</span>
-                <span className="text-gray-500">{a.type}</span>
-                <span className="text-gray-500">{a.address}</span>
-                <span className="text-gray-500">
-                  {a.checkInDate?.slice(0, 10)} - {a.checkOutDate?.slice(0, 10)}
-                </span>
-                <span className="text-gray-500">{a.location}</span>
-                {a.confirmationNumber && (
-                  <span className="text-gray-500">
-                    Conf#: {a.confirmationNumber}
-                  </span>
+
+        <div className="space-y-6">
+          {sortedDays.map((day, idx) => (
+            <div
+              key={day.date}
+              className="mb-2 rounded-lg border border-gray-200 bg-gray-50 p-4 shadow-sm"
+            >
+              <div className="flex items-center justify-between mb-2">
+                <h4 className="font-semibold text-lg text-gray-900">
+                  {`Day ${idx + 1}: ${dayjs(day.date).format("MMMM D, YYYY")}`}
+                </h4>
+                <div className="flex gap-2">
+                  {editDayIdx === idx ? (
+                    <button
+                      className="text-gray-500 underline"
+                      onClick={() => setEditDayIdx(null)}
+                    >
+                      Cancel
+                    </button>
+                  ) : (
+                    <>
+                      <button
+                        className="text-blue-600 underline hover:text-blue-800 transition cursor-pointer"
+                        onClick={() => {
+                          setEditDayIdx(idx);
+                          setNewActivity({ time: "", description: "" });
+                        }}
+                      >
+                        + Add Activity
+                      </button>
+                      <button
+                        className="text-red-600 underline hover:text-red-800 transition cursor-pointer"
+                        onClick={() => handleDeleteDay(idx)}
+                      >
+                        Delete Day
+                      </button>
+                    </>
+                  )}
+                </div>
+              </div>
+              <ul className="mb-2 text-gray-900">
+                {day.activities.length === 0 ? (
+                  <li className="ml-4 italic text-gray-500">
+                    No activities yet.
+                  </li>
+                ) : (
+                  [...day.activities]
+                    .sort((a, b) => a.time.localeCompare(b.time))
+                    .map((act, actIdx) =>
+                      editActivity &&
+                      editActivity.dayIdx === idx &&
+                      editActivity.actIdx === actIdx ? (
+                        <li
+                          key={actIdx}
+                          className="ml-4 flex items-center gap-2"
+                        >
+                          <input
+                            type="time"
+                            value={editActivityData.time}
+                            onChange={(e) =>
+                              setEditActivityData((data) => ({
+                                ...data,
+                                time: e.target.value,
+                              }))
+                            }
+                            className="border rounded px-2 py-1 bg-white text-gray-900 text-base"
+                          />
+                          <input
+                            type="text"
+                            value={editActivityData.description}
+                            onChange={(e) =>
+                              setEditActivityData((data) => ({
+                                ...data,
+                                description: e.target.value,
+                              }))
+                            }
+                            className="border rounded px-2 py-1 bg-white text-gray-900 text-base"
+                            placeholder="Description"
+                          />
+                          <button
+                            className="bg-green-600 text-white px-2 py-1 rounded"
+                            onClick={() => handleUpdateActivity(idx, actIdx)}
+                            type="button"
+                          >
+                            Save
+                          </button>
+                          <button
+                            className="text-gray-500 underline"
+                            onClick={() => setEditActivity(null)}
+                            type="button"
+                          >
+                            Cancel
+                          </button>
+                        </li>
+                      ) : (
+                        <li
+                          key={actIdx}
+                          className="ml-4 flex items-center gap-2 text-gray-900"
+                        >
+                          <span className="font-mono text-gray-900">
+                            {act.time}
+                          </span>{" "}
+                          - {act.description}
+                          <button
+                            className="text-blue-600 underline text-sm hover:text-blue-800 transition cursor-pointer"
+                            onClick={() => {
+                              setEditActivity({ dayIdx: idx, actIdx });
+                              setEditActivityData(act);
+                            }}
+                            type="button"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            className="text-red-600 underline text-sm hover:text-red-800 transition cursor-pointer"
+                            onClick={() => handleDeleteActivity(idx, actIdx)}
+                            type="button"
+                          >
+                            Delete
+                          </button>
+                        </li>
+                      )
+                    )
                 )}
-                <button
-                  type="button"
-                  onClick={() => handleRemoveAccommodation(a._id)}
-                  className="text-red-500 hover:underline ml-2"
-                >
-                  Remove
-                </button>
-              </li>
-            ))}
-          </ul>
-          {/* Add Accommodation Form */}
-          <div className="flex flex-col gap-2 mt-2">
-            <input
-              type="text"
-              value={newAcc.name}
-              onChange={(e) =>
-                setNewAcc((n) => ({ ...n, name: e.target.value }))
-              }
-              className="border rounded px-3 py-2 bg-white text-gray-900"
-              placeholder="Accommodation name"
-              required
-            />
-            <input
-              type="text"
-              value={newAcc.address}
-              onChange={(e) =>
-                setNewAcc((n) => ({ ...n, address: e.target.value }))
-              }
-              className="border rounded px-3 py-2 bg-white text-gray-900"
-              placeholder="Address"
-              required
-            />
-            <select
-              value={newAcc.type}
-              onChange={(e) =>
-                setNewAcc((n) => ({ ...n, type: e.target.value }))
-              }
-              className="border rounded px-3 py-2 bg-white text-gray-900"
-              required
-            >
-              <option value="Hotel">Hotel</option>
-              <option value="Airbnb">Airbnb</option>
-              <option value="Hostel">Hostel</option>
-              <option value="Other">Other</option>
-            </select>
-            <input
-              type="text"
-              value={newAcc.confirmationNumber}
-              onChange={(e) =>
-                setNewAcc((n) => ({ ...n, confirmationNumber: e.target.value }))
-              }
-              className="border rounded px-3 py-2 bg-white text-gray-900"
-              placeholder="Confirmation Number"
-            />
-            <input
-              type="date"
-              value={newAcc.checkInDate}
-              onChange={(e) =>
-                setNewAcc((n) => ({ ...n, checkInDate: e.target.value }))
-              }
-              className="border rounded px-3 py-2 bg-white text-gray-900"
-              placeholder="Check-in Date"
-              required
-            />
-            <input
-              type="date"
-              value={newAcc.checkOutDate}
-              onChange={(e) =>
-                setNewAcc((n) => ({ ...n, checkOutDate: e.target.value }))
-              }
-              className="border rounded px-3 py-2 bg-white text-gray-900"
-              placeholder="Check-out Date"
-              required
-            />
-            <input
-              type="text"
-              value={newAcc.location}
-              onChange={(e) =>
-                setNewAcc((n) => ({ ...n, location: e.target.value }))
-              }
-              className="border rounded px-3 py-2 bg-white text-gray-900"
-              placeholder="Location"
-              required
-            />
-            <button
-              type="button"
-              onClick={handleAddAccommodation}
-              className="bg-green-600 text-white px-3 py-2 rounded"
-              disabled={addingAcc}
-            >
-              Add
-            </button>
-          </div>
-        </div>
-        {/* Points of Interest Section */}
-        <div className="mt-6 text-gray-700 text-base">
-          <h4 className="font-semibold mb-2">Points of Interest</h4>
-          <ul className="list-disc list-inside">
-            {(itinerary.pointsOfInterest || []).map((poi: PointOfInterest) => (
-              <li key={poi._id}>{poi.name}</li>
-            ))}
-          </ul>
+              </ul>
+              {editDayIdx === idx && (
+                <div className="flex gap-2 mt-2">
+                  <input
+                    type="time"
+                    value={newActivity.time}
+                    onChange={(e) =>
+                      setNewActivity((a) => ({ ...a, time: e.target.value }))
+                    }
+                    className="border rounded px-2 py-1 bg-white text-gray-900 text-base"
+                  />
+                  <input
+                    type="text"
+                    value={newActivity.description}
+                    onChange={(e) =>
+                      setNewActivity((a) => ({
+                        ...a,
+                        description: e.target.value,
+                      }))
+                    }
+                    className="border rounded px-2 py-1 bg-white text-gray-900 text-base"
+                    placeholder="Description"
+                  />
+                  <button
+                    className="bg-green-600 text-white px-3 py-1 rounded"
+                    onClick={() => handleAddActivity(idx)}
+                  >
+                    Add
+                  </button>
+                </div>
+              )}
+            </div>
+          ))}
         </div>
       </div>
     </main>

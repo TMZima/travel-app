@@ -1,4 +1,4 @@
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import {
   getItinerary,
   updateItinerary,
@@ -6,44 +6,31 @@ import {
 } from "@/controllers/itineraryController";
 
 /**
- * Handles the GET request to fetch an itinerary by ID.
- * @param {NextRequest} req - The incoming HTTP request object.
- * @param {{ params: { id: string } }} context - The request context containing route parameters.
- * @returns {Promise<Response>} - The response returned by the controller.
+ * GET /api/itinerary/[id]
+ * @param {NextRequest} req - The request object
+ * @returns {Promise<NextResponse>} The response with the itinerary details
  */
-export const GET = (
+export const GET: (
   req: NextRequest,
   context: { params: { id: string } }
-): Promise<Response> => {
-  return getItinerary(req, context);
-};
+) => Promise<NextResponse> = getItinerary;
 
 /**
- * Handles the PUT request to update an itinerary by ID.
- * Delegates the request to the 'updateItinerary' controller.
- *
- * @param {NextRequest} req - The incoming HTTP request object.
- * @param {{ params: { id: string } }} context - The request context containing route parameters.
- * @returns {Promise<Response>} - The response returned by the controller.
+ * PUT /api/itinerary/[id]
+ * @param {NextRequest} req - The request object
+ * @returns {Promise<NextResponse>} The response after updating the itinerary
  */
-export const PUT = (
+export const PUT: (
   req: NextRequest,
   context: { params: { id: string } }
-): Promise<Response> => {
-  return updateItinerary(req, context);
-};
+) => Promise<NextResponse> = updateItinerary;
 
 /**
- * Handles the DELETE request to remove an itinerary by ID.
- * Delegates the request to the 'deleteItinerary' controller.
- *
- * @param {NextRequest} req - The incoming HTTP request object.
- * @param {{ params: { id: string } }} context - The request context containing route parameters.
- * @returns {Promise<Response>} - The response returned by the controller.
+ * DELETE /api/itinerary/[id]
+ * @param {NextRequest} req - The request object
+ * @returns {Promise<NextResponse>} The response after deleting the itinerary
  */
-export const DELETE = (
+export const DELETE: (
   req: NextRequest,
   context: { params: { id: string } }
-): Promise<Response> => {
-  return deleteItinerary(req, context);
-};
+) => Promise<NextResponse> = deleteItinerary;

@@ -1,9 +1,4 @@
 import {
-  IItinerary,
-  ItineraryInput,
-  ItineraryUpdateData,
-} from "@/models/itineraryModel";
-import {
   createItinerary,
   getItineraryById,
   updateItineraryById,
@@ -11,72 +6,52 @@ import {
   getAllItinerariesByUser,
 } from "@/repositories/itineraryRepository";
 import { BadRequestError, NotFoundError } from "@/utils/customErrors";
+import { IItinerary } from "@/models/itineraryModel";
 
-/**
- * Create a new itinerary
- */
+interface Activity {
+  time: string;
+  description: string;
+}
+
+interface DayPlan {
+  date: string;
+  activities: Activity[];
+}
+
 export async function createItineraryService(
-  data: ItineraryInput
+  data: Partial<IItinerary>
 ): Promise<IItinerary> {
-  if (!data.title || !data.startDate || !data.endDate || !data.createdBy) {
-    throw new BadRequestError("Please provide all required fields");
+  if (!data.destination || !data.startDate || !data.endDate) {
+    throw new BadRequestError("Missing required fields");
   }
-
+  // Optionally validate days/activities structure here
   return await createItinerary(data);
 }
 
-/**
- * Fetch an itinerary by its ID
- */
 export async function getItineraryService(id: string): Promise<IItinerary> {
   const itinerary = await getItineraryById(id);
-  if (!itinerary) {
-    throw new NotFoundError("The requested itinerary could not be found");
-  }
+  if (!itinerary) throw new NotFoundError("Itinerary not found");
   return itinerary;
 }
 
 export async function updateItineraryService(
   id: string,
-  data: ItineraryUpdateData
+  data: Partial<IItinerary>
 ): Promise<IItinerary> {
-  const updatedItinerary = await updateItineraryById(id, data);
-  if (!updatedItinerary) {
-    throw new NotFoundError(
-      "The itinerary you are trying to update does not exist"
-    );
+  if (data.days) {
+    // Optionally validate days/activities structure here
   }
-  return updatedItinerary;
+  const updated = await updateItineraryById(id, data);
+  if (!updated) throw new NotFoundError("Itinerary not found");
+  return updated;
 }
 
-/**
- * Delete an itinerary by its ID
- */
-export async function deleteItineraryService(
-  id: string
-): Promise<{ message: string }> {
-  const deletedItinerary = await deleteItineraryById(id);
-  if (!deletedItinerary) {
-    throw new NotFoundError(
-      "The itinerary you are trying to delete does not exist"
-    );
-  }
-  return { message: "Itinerary deleted successfully" };
+export async function deleteItineraryService(id: string): Promise<void> {
+  await deleteItineraryById(id);
 }
 
-/**
- * Fetch all itineraries for a specific user
- * @param userId - The ID of the user
- * @param page - The page number for pagination
- * @param limit - The number of itineraries to fetch per page
- * @returns An array of itineraries
- */
-export async function getAllItinerariesService(
-  userId: string,
-  page: number,
-  limit: number
+export async function getUserItinerariesService(
+  userId: string
 ): Promise<IItinerary[]> {
-  const skip = (page - 1) * limit;
-  const itineraries = await getAllItinerariesByUser(userId, skip, limit);
-  return itineraries || [];
+  return await getAllItinerariesByUser(userId);
 }

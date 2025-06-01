@@ -1,84 +1,51 @@
-import mongoose, { Model } from "mongoose";
-import "@/models/userModel";
-import "@/models/accommodationModel";
-import "@/models/pointsOfInterestModel";
+import mongoose, { Schema, Document } from "mongoose";
+
+interface Activity {
+  time: string; // e.g. "09:00"
+  description: string;
+}
+
+interface DayPlan {
+  date: string; // e.g. "2024-07-01"
+  activities: Activity[];
+}
 
 export interface IItinerary extends Document {
-  _id: mongoose.Types.ObjectId;
   createdBy: mongoose.Types.ObjectId;
-  title: string;
+  destination: string;
   startDate: Date;
   endDate: Date;
-  accommodations: mongoose.Types.ObjectId[];
-  pointsOfInterest: mongoose.Types.ObjectId[];
-  sharedWith: mongoose.Types.ObjectId[];
-  uploadedEmails?: string;
+  days: DayPlan[];
   createdAt: Date;
   updatedAt: Date;
 }
 
-export type ItineraryInput = {
-  createdBy: mongoose.Types.ObjectId;
-  title: string;
-  startDate: Date;
-  endDate: Date;
-  accommodations?: mongoose.Types.ObjectId[];
-  pointsOfInterest?: mongoose.Types.ObjectId[];
-  sharedWith?: mongoose.Types.ObjectId[];
-  uploadedEmails?: string;
-};
-
-export type ItineraryUpdateData = Partial<ItineraryInput>;
-
-const itinerarySchema = new mongoose.Schema(
+const activitySchema = new Schema<Activity>(
   {
-    createdBy: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
-      index: true,
-    },
-    title: {
-      type: String,
-      required: true,
-    },
-    startDate: {
-      type: Date,
-      required: true,
-    },
-    endDate: {
-      type: Date,
-      required: true,
-    },
-    accommodations: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Accommodation",
-      },
-    ],
-    pointsOfInterest: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "PointOfInterest",
-      },
-    ],
-    sharedWith: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
-      },
-    ],
-    uploadedEmails: {
-      type: String,
-    },
+    time: { type: String, required: true },
+    description: { type: String, required: true },
   },
-  {
-    timestamps: { createdAt: "createdAt", updatedAt: "updatedAt" },
-  }
+  { _id: false }
 );
 
-const Itinerary: Model<IItinerary> =
-  mongoose.models.Itinerary ||
-  mongoose.model<IItinerary>("Itinerary", itinerarySchema);
+const dayPlanSchema = new Schema<DayPlan>(
+  {
+    date: { type: String, required: true },
+    activities: { type: [activitySchema], default: [] },
+  },
+  { _id: false }
+);
 
-export default Itinerary;
+const itinerarySchema = new Schema<IItinerary>(
+  {
+    createdBy: { type: Schema.Types.ObjectId, ref: "User", required: true },
+    destination: { type: String, required: true },
+    startDate: { type: Date, required: true },
+    endDate: { type: Date, required: true },
+    days: { type: [dayPlanSchema], default: [] },
+  },
+  { timestamps: true }
+);
+
+export default mongoose.models.Itinerary ||
+  mongoose.model<IItinerary>("Itinerary", itinerarySchema);

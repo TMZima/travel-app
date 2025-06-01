@@ -63,7 +63,7 @@ const userSchema = new mongoose.Schema(
       validate: {
         validator: function (this: IUserDocument, v: string) {
           if (!this.isModified("password")) return true;
-          return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/.test(
+          return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?#&])[A-Za-z\d@$!%*?#&]{8,}$/.test(
             v
           );
         },

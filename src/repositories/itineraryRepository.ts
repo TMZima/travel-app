@@ -1,33 +1,18 @@
-import mongoose from "mongoose";
-import Itinerary, {
-  IItinerary,
-  ItineraryInput,
-  ItineraryUpdateData,
-} from "@/models/itineraryModel";
+import Itinerary, { IItinerary } from "@/models/itineraryModel";
 import { NotFoundError, BadRequestError } from "@/utils/customErrors";
 import { validateObjectId } from "@/utils/helperRepository";
+import { dbConnect } from "@/config/db"; // <-- import your dbConnect
 
 /**
  * Create a new itinerary
- * @param data - The itinerary data
- * @returns The created itinerary
  */
 export async function createItinerary(
-  data: ItineraryInput
+  data: Partial<IItinerary>
 ): Promise<IItinerary> {
+  await dbConnect(); // <-- add this
   try {
     const itinerary = await Itinerary.create(data);
-    const createdItinerary = await Itinerary.findById(itinerary._id)
-      .populate("createdBy", "username email")
-      .populate("accommodations")
-      .populate("pointsOfInterest")
-      .exec();
-
-    if (!createdItinerary) {
-      throw new NotFoundError("Created itinerary not found");
-    }
-
-    return createdItinerary;
+    return itinerary;
   } catch (err) {
     throw new BadRequestError("Failed to create itinerary");
   }
@@ -35,94 +20,48 @@ export async function createItinerary(
 
 /**
  * Get an itinerary by ID
- * @param id - The ID of the itinerary
- * @returns The itinerary object
- * @throws BadRequestError if the ID is invalid
- * @throws NotFoundError if the itinerary is not found
  */
-export async function getItineraryById(id: string): Promise<IItinerary> {
+export async function getItineraryById(id: string): Promise<IItinerary | null> {
+  await dbConnect(); // <-- add this
   validateObjectId(id, "Invalid itinerary ID");
-  const itinerary = await Itinerary.findById(id)
-    .populate("createdBy", "username email")
-    .populate("accommodations")
-    .populate("pointsOfInterest")
-    .exec();
-
-  if (!itinerary) {
-    throw new NotFoundError("Itinerary not found");
-  }
-
+  const itinerary = await Itinerary.findById(id).exec();
+  if (!itinerary) throw new NotFoundError("Itinerary not found");
   return itinerary;
 }
 
 /**
  * Update an itinerary by ID
- * @param id - The ID of the itinerary
- * @param data - The itinerary data to update
- * @returns The updated itinerary object
- * @throws BadRequestError if the ID is invalid
- * @throws NotFoundError if the itinerary is not found
  */
 export async function updateItineraryById(
   id: string,
-  data: ItineraryUpdateData
-): Promise<IItinerary> {
+  data: Partial<IItinerary>
+): Promise<IItinerary | null> {
+  await dbConnect(); // <-- add this
   validateObjectId(id, "Invalid itinerary ID");
-  const updatedItinerary = await Itinerary.findByIdAndUpdate(id, data, {
+  const updated = await Itinerary.findByIdAndUpdate(id, data, {
     new: true,
-    runValidators: true,
-  })
-    .populate("createdBy", "username email")
-    .populate("accommodations")
-    .populate("pointsOfInterest")
-    .exec();
-
-  if (!updatedItinerary) {
-    throw new NotFoundError("Itinerary not found");
-  }
-
-  return updatedItinerary;
+  }).exec();
+  if (!updated) throw new NotFoundError("Itinerary not found");
+  return updated;
 }
 
 /**
  * Delete an itinerary by ID
- * @param id - The ID of the itinerary
- * @returns The deleted itinerary object
- * @throws BadRequestError if the ID is invalid
- * @throws NotFoundError if the itinerary is not found
  */
-export async function deleteItineraryById(id: string): Promise<IItinerary> {
+export async function deleteItineraryById(id: string): Promise<void> {
+  await dbConnect(); // <-- add this
   validateObjectId(id, "Invalid itinerary ID");
-
-  const deletedItinerary = await Itinerary.findByIdAndDelete(id);
-
-  if (!deletedItinerary) {
-    throw new NotFoundError("Itinerary not found");
-  }
-
-  return deletedItinerary;
+  const deleted = await Itinerary.findByIdAndDelete(id).exec();
+  if (!deleted) throw new NotFoundError("Itinerary not found");
 }
 
 /**
- * Get all itineraries for a specific user
- * @param userId - The ID of the user
- * @param skip - The number of itineraries to skip (for pagination)
- * @param limit - The maximum number of documents to return
- * @returns A list of itineraries
- * @throws BadRequestError if the user ID is invalid
+ * Get all itineraries for a user
  */
 export async function getAllItinerariesByUser(
-  userId: string | mongoose.Types.ObjectId,
-  skip = 0,
-  limit = 10
+  userId: string
 ): Promise<IItinerary[]> {
-  validateObjectId(userId.toString(), "Invalid user ID");
-
-  return await Itinerary.find({ createdBy: userId })
-    .sort({ createdAt: -1 })
-    .skip(skip)
-    .limit(limit)
-    .populate("createdBy", "username email")
-    .populate("accommodations")
-    .populate("pointsOfInterest");
+  await dbConnect(); // <-- add this
+  validateObjectId(userId, "Invalid user ID");
+  return Itinerary.find({ createdBy: userId }).sort({ startDate: 1 }).exec();
 }
