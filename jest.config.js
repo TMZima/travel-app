@@ -1,11 +1,14 @@
 module.exports = {
-  testEnvironment: "jsdom", // Use jsdom for React/Next.js
+  testEnvironment: "jsdom",
   transform: {
-    "^.+\\.(js|jsx|ts|tsx)$": "babel-jest",
+    "^.+\\.(js|jsx|ts|tsx)$": [
+      "babel-jest",
+      { configFile: "./jest.babel.config.js" },
+    ],
   },
   moduleNameMapper: {
     "^@/(.*)$": "<rootDir>/src/$1",
-    "\\.(css|less|scss|sass)$": "identity-obj-proxy", // Optional: for CSS modules
+    "\\.(css|less|scss|sass)$": "identity-obj-proxy",
   },
   testPathIgnorePatterns: ["/node_modules/", "/.next/"],
   collectCoverage: true,
