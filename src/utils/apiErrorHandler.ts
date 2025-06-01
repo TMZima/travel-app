@@ -1,4 +1,3 @@
-import { NextResponse } from "next/server";
 import { AppError } from "./customErrors";
 
 function isAppError(err: unknown): err is AppError {

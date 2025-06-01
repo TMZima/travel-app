@@ -1,5 +1,4 @@
-import { NextRequest } from "next/server";
-import { BadRequestError, ConfigurationError } from "@/utils/customErrors";
+import { ConfigurationError } from "@/utils/customErrors";
 
 /**
  * Get the JWT secret from environment variables

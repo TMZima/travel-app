@@ -7,15 +7,7 @@ import {
   updateUserService,
   deleteUserService,
 } from "@/services/users/userService";
-import {
-  loginUserService,
-  resetPasswordService,
-} from "@/services/users/authService";
-import {
-  getFriendsService,
-  addFriendService,
-  removeFriendService,
-} from "@/services/users/friendService";
+import { loginUserService } from "@/services/users/authService";
 import { getUserIdFromRequest } from "@/utils/auth";
 
 /**
@@ -76,21 +68,6 @@ export async function loginUser(req: NextRequest): Promise<NextResponse> {
 }
 
 /**
- * Reset a user's password
- * @param req - The incoming HTTP request
- * @returns A JSON response with the success message
- */
-export async function resetPassword(req: NextRequest): Promise<NextResponse> {
-  try {
-    const body = await req.json();
-    const response = await resetPasswordService(body);
-    return sendSuccess(response, 200, "Password reset successfully");
-  } catch (err) {
-    return sendError(err);
-  }
-}
-
-/**
  * Get a user's details
  * @param req - The incoming HTTP request
  * @returns A JSON response with the user's details
@@ -129,48 +106,6 @@ export async function deleteUser(req: NextRequest): Promise<NextResponse> {
   try {
     const response = await deleteUserService(req);
     return sendSuccess(response, 200, "User deleted successfully");
-  } catch (err) {
-    return sendError(err);
-  }
-}
-
-/**
- * Get a user's friends
- * @param req - The incoming HTTP request
- * @returns A JSON response with the user's friends
- */
-export async function getFriends(req: NextRequest): Promise<NextResponse> {
-  try {
-    const response = await getFriendsService(req);
-    return sendSuccess(response, 200, "Friends fetched successfully");
-  } catch (err) {
-    return sendError(err);
-  }
-}
-
-/**
- * Add a friend
- * @param req - The incoming HTTP request
- * @returns A JSON response with the success message
- */
-export async function addFriend(req: NextRequest): Promise<NextResponse> {
-  try {
-    const response = await addFriendService(req);
-    return sendSuccess(response, 200, "Friend added successfully");
-  } catch (err) {
-    return sendError(err);
-  }
-}
-
-/**
- * Remove a friend
- * @param req - The incoming HTTP request
- * @returns A JSON response with the success message
- */
-export async function removeFriend(req: NextRequest): Promise<NextResponse> {
-  try {
-    const response = await removeFriendService(req);
-    return sendSuccess(response, 200, "Friend removed successfully");
   } catch (err) {
     return sendError(err);
   }

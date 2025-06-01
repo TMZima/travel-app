@@ -8,23 +8,12 @@ export interface IUserDocument extends Document {
   email: string;
   password: string;
   itineraries: mongoose.Types.ObjectId[];
-  friends: mongoose.Types.ObjectId[];
   resetToken: string | null;
   resetTokenExpires: Date | null;
   comparePassword(candidatePassword: string): Promise<boolean>;
 }
 
 interface IUserModel extends Model<IUserDocument> {
-  getPaginatedFriends(
-    userId: string,
-    page?: number,
-    limit?: number
-  ): Promise<{
-    data: mongoose.Types.ObjectId[];
-    page: number;
-    limit: number;
-    total: number;
-  }>;
   getPaginatedItineraries(
     userId: string,
     page?: number,
@@ -77,12 +66,6 @@ const userSchema = new mongoose.Schema(
         ref: "Itinerary",
       },
     ],
-    friends: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
-      },
-    ],
     resetToken: {
       type: String,
       default: null,
@@ -129,28 +112,6 @@ userSchema.set("toJSON", {
     return ret;
   },
 });
-
-// Static method to get paginated friends:
-userSchema.statics.getPaginatedFriends = async function (
-  userId: string,
-  page = 1,
-  limit = 10
-) {
-  const user = await this.findById(userId).populate("friends").exec();
-  if (!user) return { data: [], page, limit, total: 0 };
-
-  const total = user.friends.length;
-  const start = (page - 1) * limit;
-  const end = start + limit;
-  const paginatedFriends = user.friends.slice(start, end);
-
-  return {
-    data: paginatedFriends,
-    page,
-    limit,
-    total,
-  };
-};
 
 // Static method to get paginated itineraries:
 userSchema.statics.getPaginatedItineraries = async function (
