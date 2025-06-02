@@ -55,10 +55,6 @@ JWT_SECRET=your_jwt_secret
 - Itinerary management (CRUD)
 - Responsive UI with React and Tailwind CSS
 
-## Deployment
-
-Deploy easily on [Vercel](https://vercel.com/) or your preferred platform.
-
 ## Notes
 
 - Uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) for font optimization.
