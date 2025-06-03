@@ -40,7 +40,7 @@ export async function getItinerary(
   context: { params: { id: string } }
 ): Promise<NextResponse> {
   try {
-    const { id } = await context.params;
+    const { id } = context.params;
     const itinerary = await getItineraryService(id);
     return sendSuccess(itinerary, 200, "Itinerary fetched successfully");
   } catch (err) {
@@ -56,7 +56,7 @@ export async function updateItinerary(
   context: { params: { id: string } }
 ): Promise<NextResponse> {
   try {
-    const { id } = await context.params;
+    const { id } = context.params;
     const data = await req.json();
     const updated = await updateItineraryService(id, data);
     return sendSuccess(updated, 200, "Itinerary updated successfully");
@@ -73,7 +73,7 @@ export async function deleteItinerary(
   context: { params: { id: string } }
 ): Promise<NextResponse> {
   try {
-    const { id } = await context.params;
+    const { id } = context.params;
     await deleteItineraryService(id);
     return sendSuccess(null, 200, "Itinerary deleted successfully");
   } catch (err) {
