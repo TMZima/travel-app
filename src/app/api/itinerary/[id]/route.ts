@@ -10,27 +10,33 @@ import {
  * @param {NextRequest} req - The request object
  * @returns {Promise<NextResponse>} The response with the itinerary details
  */
-export const GET: (
+export async function GET(
   req: NextRequest,
   context: { params: { id: string } }
-) => Promise<NextResponse> = getItinerary;
+) {
+  return getItinerary(req, context);
+}
 
 /**
  * PUT /api/itinerary/[id]
  * @param {NextRequest} req - The request object
  * @returns {Promise<NextResponse>} The response after updating the itinerary
  */
-export const PUT: (
+export async function PUT(
   req: NextRequest,
   context: { params: { id: string } }
-) => Promise<NextResponse> = updateItinerary;
+) {
+  return updateItinerary(req, context);
+}
 
 /**
  * DELETE /api/itinerary/[id]
  * @param {NextRequest} req - The request object
  * @returns {Promise<NextResponse>} The response after deleting the itinerary
  */
-export const DELETE: (
+export async function DELETE(
   req: NextRequest,
   context: { params: { id: string } }
-) => Promise<NextResponse> = deleteItinerary;
+) {
+  return deleteItinerary(req, context);
+}
