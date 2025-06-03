@@ -19,7 +19,7 @@ export const POST = async (): Promise<NextResponse> => {
       expires: new Date(0),
     });
     return response;
-  } catch (err) {
+  } catch {
     return sendError(
       new BadRequestError("Logout failed", "Unable to log out user")
     );

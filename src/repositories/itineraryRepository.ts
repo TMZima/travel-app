@@ -13,7 +13,7 @@ export async function createItinerary(
   try {
     const itinerary = await Itinerary.create(data);
     return itinerary;
-  } catch (err) {
+  } catch {
     throw new BadRequestError("Failed to create itinerary");
   }
 }

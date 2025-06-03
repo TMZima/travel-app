@@ -7,6 +7,7 @@ import {
   UnauthorizedError,
   BadRequestError,
 } from "../customErrors";
+import type { Error as MongooseError } from "mongoose";
 
 describe("AppError", () => {
   it("sets message, statusCode, and userMessage", () => {
@@ -22,11 +23,14 @@ describe("AppError", () => {
 describe("MongooseValidationError", () => {
   it("formats mongoose validation error messages", () => {
     const fakeMongooseError = {
+      name: "ValidationError",
+      message: "Validation failed",
       errors: {
         field1: { message: "Field1 is required" },
         field2: { message: "Field2 must be a number" },
       },
-    } as any;
+      addError: () => {},
+    } as unknown as MongooseError.ValidationError;
     const err = new MongooseValidationError(fakeMongooseError);
     expect(err.message).toBe("Validation failed");
     expect(err.statusCode).toBe(400);

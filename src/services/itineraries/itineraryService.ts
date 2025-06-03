@@ -8,16 +8,6 @@ import {
 import { BadRequestError, NotFoundError } from "@/utils/customErrors";
 import { IItinerary } from "@/models/itineraryModel";
 
-interface Activity {
-  time: string;
-  description: string;
-}
-
-interface DayPlan {
-  date: string;
-  activities: Activity[];
-}
-
 export async function createItineraryService(
   data: Partial<IItinerary>
 ): Promise<IItinerary> {

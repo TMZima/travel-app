@@ -2,6 +2,7 @@
 import { useState, FormEvent, ChangeEvent } from "react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
+import { AxiosError } from "axios";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 dayjs.extend(utc);
@@ -25,7 +26,7 @@ interface DayPlan {
 
 /**
  * Page for creating a new itinerary.
- * Allows user to add, edit, and delete days and activities for each day.
+ * Allows user to add days and activities for each day.
  */
 export default function CreateItineraryPage() {
   const router = useRouter();
@@ -37,18 +38,6 @@ export default function CreateItineraryPage() {
   const [activityInputs, setActivityInputs] = useState<
     Record<number, Activity>
   >({});
-  const [editDayIdx, setEditDayIdx] = useState<number | null>(null);
-  const [editDayDate, setEditDayDate] = useState<string>("");
-
-  // For editing activities
-  const [editActivity, setEditActivity] = useState<{
-    dayIdx: number;
-    actIdx: number;
-  } | null>(null);
-  const [editActivityData, setEditActivityData] = useState<Activity>({
-    time: "",
-    description: "",
-  });
 
   /**
    * Adds a new day to the itinerary.
@@ -74,50 +63,6 @@ export default function CreateItineraryPage() {
   };
 
   /**
-   * Deletes a day from the itinerary.
-   */
-  const handleDeleteDay = (dayIdx: number): void => {
-    setDays(days.filter((_, idx) => idx !== dayIdx));
-    setActivityInputs((prev) => {
-      const updated = { ...prev };
-      delete updated[dayIdx];
-      return updated;
-    });
-    // If editing this day, cancel edit
-    if (editDayIdx === dayIdx) {
-      setEditDayIdx(null);
-      setEditDayDate("");
-    }
-  };
-
-  /**
-   * Starts editing a day's date.
-   */
-  const startEditDay = (idx: number, date: string) => {
-    setEditDayIdx(idx);
-    setEditDayDate(date);
-  };
-
-  /**
-   * Updates a day's date.
-   */
-  const handleUpdateDay = (dayIdx: number): void => {
-    if (!editDayDate) {
-      toast.error("Please enter a date.");
-      return;
-    }
-    if (days.some((d, i) => d.date === editDayDate && i !== dayIdx)) {
-      toast.error("This Day already exists.");
-      return;
-    }
-    const updatedDays = [...days];
-    updatedDays[dayIdx].date = editDayDate;
-    setDays(updatedDays);
-    setEditDayIdx(null);
-    setEditDayDate("");
-  };
-
-  /**
    * Adds a new activity to a specific day.
    * @param dayIdx - The index of the day in the days array.
    */
@@ -134,50 +79,6 @@ export default function CreateItineraryPage() {
       ...prev,
       [dayIdx]: { time: "", description: "" },
     }));
-  };
-
-  /**
-   * Deletes an activity from a specific day.
-   */
-  const handleDeleteActivity = (dayIdx: number, actIdx: number): void => {
-    const updatedDays = [...days];
-    updatedDays[dayIdx].activities.splice(actIdx, 1);
-    setDays(updatedDays);
-    if (
-      editActivity &&
-      editActivity.dayIdx === dayIdx &&
-      editActivity.actIdx === actIdx
-    ) {
-      setEditActivity(null);
-      setEditActivityData({ time: "", description: "" });
-    }
-  };
-
-  /**
-   * Starts editing an activity.
-   */
-  const startEditActivity = (
-    dayIdx: number,
-    actIdx: number,
-    activity: Activity
-  ) => {
-    setEditActivity({ dayIdx, actIdx });
-    setEditActivityData(activity);
-  };
-
-  /**
-   * Updates an activity in a specific day.
-   */
-  const handleUpdateActivity = (dayIdx: number, actIdx: number): void => {
-    if (!editActivityData.time || !editActivityData.description) {
-      toast.error("Please fill out both time and description.");
-      return;
-    }
-    const updatedDays = [...days];
-    updatedDays[dayIdx].activities[actIdx] = { ...editActivityData };
-    setDays(updatedDays);
-    setEditActivity(null);
-    setEditActivityData({ time: "", description: "" });
   };
 
   /**
@@ -203,11 +104,12 @@ export default function CreateItineraryPage() {
       });
       toast.success("Itinerary created!");
       router.push("/dashboard");
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const error = err as AxiosError<{ message?: string; error?: string }>;
       toast.error(
-        err?.response?.data?.message ||
-          err?.response?.data?.error ||
-          err?.message ||
+        error?.response?.data?.message ||
+          error?.response?.data?.error ||
+          error?.message ||
           "Failed to create itinerary"
       );
     }
@@ -299,31 +201,9 @@ export default function CreateItineraryPage() {
               {days.map((day, idx) => (
                 <li key={day.date} className="mb-4 text-gray-900">
                   <div className="flex items-center gap-2 mb-1">
-                    {editDayIdx === idx ? (
-                      <>
-                        <label
-                          htmlFor={`edit-day-date-${idx}`}
-                          className="sr-only"
-                        >
-                          Edit Day Date
-                        </label>
-                        <input
-                          id={`edit-day-date-${idx}`}
-                          type="date"
-                          value={editDayDate}
-                          onChange={(e) => setEditDayDate(e.target.value)}
-                          className="border rounded px-2 py-1 bg-white text-gray-900 text-base"
-                        />
-                        {/* ...Save/Cancel buttons... */}
-                      </>
-                    ) : (
-                      <>
-                        <div className="font-medium text-gray-900">
-                          {dayjs.utc(day.date).format("MMMM D, YYYY")}
-                        </div>
-                        {/* ...Edit/Delete buttons... */}
-                      </>
-                    )}
+                    <div className="font-medium text-gray-900">
+                      {dayjs.utc(day.date).format("MMMM D, YYYY")}
+                    </div>
                   </div>
                   <ul className="ml-4 text-gray-900">
                     {day.activities.length === 0 ? (
@@ -331,60 +211,14 @@ export default function CreateItineraryPage() {
                         No activities yet. Add one below!
                       </li>
                     ) : (
-                      day.activities.map((act, i) =>
-                        editActivity &&
-                        editActivity.dayIdx === idx &&
-                        editActivity.actIdx === i ? (
-                          <li key={i} className="flex items-center gap-2">
-                            <label
-                              htmlFor={`edit-activity-time-${idx}-${i}`}
-                              className="sr-only"
-                            >
-                              Edit Activity Time
-                            </label>
-                            <input
-                              id={`edit-activity-time-${idx}-${i}`}
-                              type="time"
-                              value={editActivityData.time}
-                              onChange={(e) =>
-                                setEditActivityData((a) => ({
-                                  ...a,
-                                  time: e.target.value,
-                                }))
-                              }
-                              className="border rounded px-2 py-1 bg-white text-gray-900 text-base"
-                            />
-                            <label
-                              htmlFor={`edit-activity-desc-${idx}-${i}`}
-                              className="sr-only"
-                            >
-                              Edit Activity Description
-                            </label>
-                            <input
-                              id={`edit-activity-desc-${idx}-${i}`}
-                              type="text"
-                              value={editActivityData.description}
-                              onChange={(e) =>
-                                setEditActivityData((a) => ({
-                                  ...a,
-                                  description: e.target.value,
-                                }))
-                              }
-                              className="border rounded px-2 py-1 bg-white text-gray-900 text-base"
-                              placeholder="Description"
-                            />
-                            {/* ...Save/Cancel buttons... */}
-                          </li>
-                        ) : (
-                          <li key={i} className="flex items-center gap-2">
-                            <span className="font-mono text-gray-900">
-                              {act.time}
-                            </span>{" "}
-                            - {act.description}
-                            {/* ...Edit/Delete buttons... */}
-                          </li>
-                        )
-                      )
+                      day.activities.map((act, i) => (
+                        <li key={i} className="flex items-center gap-2">
+                          <span className="font-mono text-gray-900">
+                            {act.time}
+                          </span>{" "}
+                          - {act.description}
+                        </li>
+                      ))
                     )}
                   </ul>
                   <div className="flex gap-2 mt-2">

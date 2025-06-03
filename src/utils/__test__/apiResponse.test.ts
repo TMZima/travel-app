@@ -11,6 +11,17 @@ jest.mock("next/server", () => ({
   },
 }));
 
+type MockResponse = {
+  body: {
+    status: number;
+    message: string;
+    data?: unknown;
+    code?: string;
+    stackTrace?: string;
+  };
+  options: { status: number };
+};
+
 describe("apiResponse", () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -42,7 +53,7 @@ describe("apiResponse", () => {
     it("returns a success response with custom status and message", () => {
       const data = { foo: "bar" };
       const result = sendSuccess(data, 201, "Created!");
-      const resultAny = result as any;
+      const resultTyped = result as unknown as MockResponse;
 
       expect(NextResponse.json).toHaveBeenCalledWith(
         {
@@ -52,8 +63,8 @@ describe("apiResponse", () => {
         },
         { status: 201 }
       );
-      expect(resultAny.body.status).toBe(201);
-      expect(resultAny.body.message).toBe("Created!");
+      expect(resultTyped.body.status).toBe(201);
+      expect(resultTyped.body.message).toBe("Created!");
     });
   });
 
@@ -69,15 +80,15 @@ describe("apiResponse", () => {
       });
 
       const result = sendError(new Error("fail"));
-      const resultAny = result as any;
+      const resultTyped = result as unknown as MockResponse;
 
       expect(NextResponse.json).toHaveBeenCalledWith(
         { message: "Bad request", status: 400, code: "BadRequestError" },
         { status: 400 }
       );
-      expect(resultAny.body.status).toBe(400);
-      expect(resultAny.body.message).toBe("Bad request");
-      expect(resultAny.body.code).toBe("BadRequestError");
+      expect(resultTyped.body.status).toBe(400);
+      expect(resultTyped.body.message).toBe("Bad request");
+      expect(resultTyped.body.code).toBe("BadRequestError");
     });
 
     it("logs internal server error for status 500", () => {

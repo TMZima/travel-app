@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import axios from "axios";
+import { AxiosError } from "axios";
 import toast from "react-hot-toast";
 
 /**
@@ -51,11 +52,15 @@ export default function Signup() {
         `Welcome aboard, ${user.username}! Your journey begins now!`
       );
       router.push("/");
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const errResponse = err as AxiosError<{
+        message?: string;
+        error?: string;
+      }>;
       const message =
-        err?.response?.data?.message ||
-        err?.response?.data?.error ||
-        err?.message ||
+        errResponse?.response?.data?.message ||
+        errResponse?.response?.data?.error ||
+        errResponse?.message ||
         "Signup failed. Please try again.";
       toast.error(message);
     } finally {

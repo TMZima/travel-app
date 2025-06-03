@@ -2,8 +2,8 @@ import { NextResponse } from "next/server";
 import { handleApiError } from "./apiErrorHandler";
 
 // Success response
-export function sendSuccess(
-  data: any,
+export function sendSuccess<T>(
+  data: T,
   status: number = 200,
   message: string = "Operation successful"
 ) {

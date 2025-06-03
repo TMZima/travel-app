@@ -3,6 +3,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import axios from "axios";
+import { AxiosError } from "axios";
 import toast from "react-hot-toast";
 
 /**
@@ -45,11 +46,12 @@ export default function Login() {
       const response = await axios.post("/api/user/login", user);
       toast.success(`Welcome back, ${response.data.data.username}!`);
       router.push("/dashboard");
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const error = err as AxiosError<{ message?: string; error?: string }>;
       const message =
-        err.response?.data?.message ||
-        err.response?.data?.error ||
-        err.message ||
+        error.response?.data?.message ||
+        error.response?.data?.error ||
+        error.message ||
         "Login failed. Please try again.";
       toast.error(message);
     } finally {
@@ -93,7 +95,7 @@ export default function Login() {
           {loading ? "Logging In..." : "Log In"}
         </button>
         <p className="mt-4 text-sm text-gray-600">
-          Don't have an account?{" "}
+          Don&apos;t have an account?{" "}
           <Link href="/signup" className="text-blue-600 hover:underline">
             Sign Up
           </Link>

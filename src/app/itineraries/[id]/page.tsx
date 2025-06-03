@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState, FormEvent } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import Link from "next/link";
 import axios from "axios";
 import dayjs from "dayjs";
@@ -31,7 +31,6 @@ interface Itinerary {
 
 export default function ItineraryDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const router = useRouter();
   const [itinerary, setItinerary] = useState<Itinerary | null>(null);
   const [loading, setLoading] = useState(true);
 

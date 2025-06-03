@@ -21,7 +21,7 @@ export default function Header() {
       await axios.post("/api/user/logout");
       toast.success("Logged out successfully!");
       router.push("/login");
-    } catch (err: any) {
+    } catch {
       toast.error("Logout failed. Please try again.");
     }
   };

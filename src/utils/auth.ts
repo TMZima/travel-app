@@ -16,7 +16,7 @@ export async function getUserFromToken(
     const secretKey = new TextEncoder().encode(secret);
     const { payload } = await jwtVerify(token, secretKey);
     return payload;
-  } catch (err) {
+  } catch {
     return null;
   }
 }

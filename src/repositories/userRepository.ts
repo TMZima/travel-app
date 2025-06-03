@@ -1,7 +1,5 @@
-import bcrypt from "bcryptjs";
 import User, { IUserDocument } from "@/models/userModel";
 import { validateObjectId } from "@/utils/helperRepository";
-import { BadRequestError, NotFoundError } from "@/utils/customErrors";
 
 /**
  * Find a user by email

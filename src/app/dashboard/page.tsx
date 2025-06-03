@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import axios from "axios";
+import { AxiosError } from "axios";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 dayjs.extend(utc);
@@ -33,11 +34,12 @@ export default function Dashboard() {
     axios
       .get("/api/itinerary/user")
       .then((res) => setItineraries(res.data.data))
-      .catch((err: any) => {
+      .catch((err: unknown) => {
+        const error = err as AxiosError<{ message?: string; error?: string }>;
         const message =
-          err?.response?.data?.message ||
-          err?.response?.data?.error ||
-          err?.message ||
+          error?.response?.data?.message ||
+          error?.response?.data?.error ||
+          error?.message ||
           "Failed to load itineraries";
         toast.error(message);
       })
@@ -53,11 +55,12 @@ export default function Dashboard() {
       await axios.delete(`/api/itinerary/${id}`);
       setItineraries((prev) => prev.filter((itin) => itin._id !== id));
       toast.success("Itinerary deleted successfully");
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const error = err as AxiosError<{ message?: string; error?: string }>;
       const message =
-        err?.response?.data?.message ||
-        err?.response?.data?.error ||
-        err?.message ||
+        error?.response?.data?.message ||
+        error?.response?.data?.error ||
+        error?.message ||
         "Failed to delete itinerary";
       toast.error(message);
       console.error("Error deleting itinerary:", err);
