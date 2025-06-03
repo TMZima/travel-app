@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import {
   getItinerary,
   updateItinerary,
@@ -12,9 +12,9 @@ import {
  */
 export async function GET(
   req: NextRequest,
-  context: { params: { id: string } }
+  { params }: { params: { id: string } }
 ) {
-  return getItinerary(req, context);
+  return getItinerary(req, { params });
 }
 
 /**
@@ -24,9 +24,9 @@ export async function GET(
  */
 export async function PUT(
   req: NextRequest,
-  context: { params: { id: string } }
+  { params }: { params: { id: string } }
 ) {
-  return updateItinerary(req, context);
+  return updateItinerary(req, { params });
 }
 
 /**
@@ -36,7 +36,7 @@ export async function PUT(
  */
 export async function DELETE(
   req: NextRequest,
-  context: { params: { id: string } }
+  { params }: { params: { id: string } }
 ) {
-  return deleteItinerary(req, context);
+  return deleteItinerary(req, { params });
 }
