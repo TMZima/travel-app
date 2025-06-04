@@ -37,10 +37,10 @@ export async function createItinerary(req: NextRequest): Promise<NextResponse> {
  */
 export async function getItinerary(
   req: NextRequest,
-  context: { params: { id: string } }
+  context: { params: Record<string, string> }
 ): Promise<NextResponse> {
   try {
-    const { id } = context.params;
+    const id = context.params.id;
     const itinerary = await getItineraryService(id);
     return sendSuccess(itinerary, 200, "Itinerary fetched successfully");
   } catch (err) {
@@ -53,10 +53,10 @@ export async function getItinerary(
  */
 export async function updateItinerary(
   req: NextRequest,
-  context: { params: { id: string } }
+  context: { params: Record<string, string> }
 ): Promise<NextResponse> {
   try {
-    const { id } = context.params;
+    const id = context.params.id;
     const data = await req.json();
     const updated = await updateItineraryService(id, data);
     return sendSuccess(updated, 200, "Itinerary updated successfully");
@@ -70,10 +70,10 @@ export async function updateItinerary(
  */
 export async function deleteItinerary(
   req: NextRequest,
-  context: { params: { id: string } }
+  context: { params: Record<string, string> }
 ): Promise<NextResponse> {
   try {
-    const { id } = context.params;
+    const id = context.params.id;
     await deleteItineraryService(id);
     return sendSuccess(null, 200, "Itinerary deleted successfully");
   } catch (err) {
