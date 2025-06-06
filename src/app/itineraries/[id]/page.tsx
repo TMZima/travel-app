@@ -197,6 +197,10 @@ export default function ItineraryDetailPage() {
   const handleUpdateDetails = async (e: FormEvent) => {
     e.preventDefault();
     if (!itinerary) return;
+    if (!editStartDate || !editEndDate || editEndDate < editStartDate) {
+      toast.error("End date must be after start date.");
+      return;
+    }
     try {
       await axios.put(`/api/itinerary/${id}`, {
         destination: editDestination,
@@ -256,7 +260,16 @@ export default function ItineraryDetailPage() {
               <input
                 type="date"
                 value={editStartDate}
-                onChange={(e) => setEditStartDate(e.target.value)}
+                onChange={(e) => {
+                  setEditStartDate(e.target.value);
+                  if (
+                    editEndDate &&
+                    e.target.value &&
+                    editEndDate < e.target.value
+                  ) {
+                    setEditEndDate("");
+                  }
+                }}
                 className="border rounded px-3 py-2 bg-white text-gray-900 text-base"
                 required
               />
@@ -264,10 +277,10 @@ export default function ItineraryDetailPage() {
                 type="date"
                 value={editEndDate}
                 onChange={(e) => setEditEndDate(e.target.value)}
-                min={itinerary?.startDate.slice(0, 10)}
-                max={itinerary?.endDate.slice(0, 10)}
+                min={editStartDate || undefined}
                 className="border rounded px-3 py-2 bg-white text-gray-900 text-base"
                 required
+                disabled={!editStartDate}
               />
             </div>
             <div className="flex gap-2 mt-2">
