@@ -1,8 +1,9 @@
 "use client";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import axios from "axios";
 import toast from "react-hot-toast";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 
 /**
  * Header component with navigation and logout functionality.
@@ -11,6 +12,21 @@ import { useRouter } from "next/navigation";
  */
 export default function Header() {
   const router = useRouter();
+  const pathname = usePathname();
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  // Check for auth cookie on mount
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const res = await axios.get("/api/auth/me");
+        setIsLoggedIn(res.data.data?.isLoggedIn);
+      } catch {
+        setIsLoggedIn(false);
+      }
+    };
+    checkAuth();
+  }, [pathname]);
 
   /**
    * Handles user logout from the navigation bar.
@@ -19,6 +35,7 @@ export default function Header() {
   const handleLogout = async (): Promise<void> => {
     try {
       await axios.post("/api/user/logout");
+      setIsLoggedIn(false);
       toast.success("Logged out successfully!");
       router.push("/login");
     } catch {
@@ -44,18 +61,20 @@ export default function Header() {
         >
           TravelApp
         </Link>
-        <div className="flex gap-6 z-20 items-center">
-          <Link href="/dashboard" className="hover:underline">
-            Dashboard
-          </Link>
-          <button
-            type="button"
-            onClick={handleLogout}
-            className="border border-white/30 bg-transparent text-white px-4 py-2 rounded-md hover:bg-white/10 transition-colors duration-200 ml-4"
-          >
-            Log Out
-          </button>
-        </div>
+        {isLoggedIn && (
+          <div className="flex gap-6 z-20 items-center">
+            <Link href="/dashboard" className="hover:underline">
+              Dashboard
+            </Link>
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="border border-white/30 bg-transparent text-white px-4 py-2 rounded-md hover:bg-white/10 transition-colors duration-200 ml-4"
+            >
+              Log Out
+            </button>
+          </div>
+        )}
       </nav>
       <div className="relative z-10">
         <h1 className="text-4xl font-bold">Welcome to TravelApp</h1>
