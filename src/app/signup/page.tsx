@@ -51,7 +51,7 @@ export default function Signup() {
       toast.success(
         `Welcome aboard, ${user.username}! Your journey begins now!`
       );
-      router.push("/");
+      router.push("/dashboard");
     } catch (err: unknown) {
       const errResponse = err as AxiosError<{
         message?: string;

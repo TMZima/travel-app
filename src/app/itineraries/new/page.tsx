@@ -135,7 +135,6 @@ export default function CreateItineraryPage() {
               }
               className="border rounded px-3 py-2 w-full bg-white text-gray-900 text-base"
               placeholder="Enter destination"
-              required
             />
           </div>
           <div>
@@ -150,7 +149,6 @@ export default function CreateItineraryPage() {
                 setStartDate(e.target.value)
               }
               className="border rounded px-3 py-2 w-full bg-white text-gray-900 text-base"
-              required
               max={endDate || undefined}
             />
           </div>
@@ -166,7 +164,6 @@ export default function CreateItineraryPage() {
                 setEndDate(e.target.value)
               }
               className="border rounded px-3 py-2 w-full bg-white text-gray-900 text-base"
-              required
               min={startDate || undefined}
             />
           </div>
