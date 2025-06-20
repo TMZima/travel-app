@@ -1,7 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getUserFromToken } from "@/utils/auth"; // Use your shared JWT utility
 
-const PUBLIC_PATHS: string[] = ["/", "/login", "/signup"];
+const PUBLIC_PATHS: string[] = [
+  "/",
+  "/login",
+  "/signup",
+  "/about",
+  "/contact",
+  "/privacy",
+];
 
 /**
  * Next.js middleware for authentication and route protection.
