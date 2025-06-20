@@ -8,8 +8,6 @@ export interface IUserDocument extends Document {
   email: string;
   password: string;
   itineraries: mongoose.Types.ObjectId[];
-  resetToken: string | null;
-  resetTokenExpires: Date | null;
   comparePassword(candidatePassword: string): Promise<boolean>;
 }
 
@@ -66,14 +64,6 @@ const userSchema = new mongoose.Schema(
         ref: "Itinerary",
       },
     ],
-    resetToken: {
-      type: String,
-      default: null,
-    },
-    resetTokenExpires: {
-      type: Date,
-      default: null,
-    },
   },
   {
     timestamps: true,
